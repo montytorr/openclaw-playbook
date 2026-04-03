@@ -35,7 +35,7 @@ chmod +x setup.sh
 ./setup.sh
 
 # Start reading
-# The playbook is ordered — read chapters 01 through 15 sequentially
+# The playbook is ordered — read chapters 01 through 16 sequentially
 ```
 
 ## Structure
@@ -60,7 +60,8 @@ openclaw-playbook/
 │   ├── 12-a2a-comms.md   ← Agent-to-agent communication
 │   ├── 13-sub-agents.md  ← Sub-agent orchestration & parallel work
 │   ├── 14-skills.md      ← Skills system & on-demand instructions
-│   └── 15-context-management.md ← Context windows & compaction resilience
+│   ├── 15-context-management.md ← Context windows & compaction resilience
+│   └── 16-infrastructure.md  ← Traefik, Docker networking, Tailscale, DNS
 ├── templates/             ← Ready-to-use workspace files
 │   ├── AGENTS.md          ← Main instruction set template
 │   ├── SOUL.md            ← Personality & behavioral guardrails
