@@ -46,7 +46,7 @@ A dashboard gives you:
                    │ File reads
 ┌──────────────────┴──────────────────────┐
 │           Agent Workspace                │
-│  ├── data/clawd.db (tasks, trades)       │
+│  ├── data/agent.db (tasks, metrics)       │
 │  ├── logs/llm-observer.jsonl (costs)     │
 │  ├── logs/the-wall.jsonl (audit)         │
 │  └── canvas/security-overview.html       │
