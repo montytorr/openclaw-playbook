@@ -1,0 +1,57 @@
+# TOOLS.md — Local Notes
+
+Skills define *how* tools work. This file is for *your* specifics — the stuff unique to your setup.
+
+---
+
+## 🌐 Browser Profiles
+
+<!-- Document your browser profiles here -->
+<!-- Example:
+### 1. `openclaw` — Headless Server Browser (DEFAULT)
+- **Where:** Server, headless Chromium
+- **Use for:** Web scraping, research, automated browsing
+- **Limitations:** Gets blocked by Cloudflare/CAPTCHAs
+
+### 2. `node-browser` — Dedicated Browser on Node Device
+- **Where:** Mac/PC connected as node
+- **Profile:** `profile="node-browser"`
+- **CDP port:** 9222
+- **Use for:** Authenticated browsing, bot-detection bypass
+-->
+
+## 📁 Project-Specific Notes
+
+<!-- Document project-specific details here -->
+<!-- Example:
+### My SaaS App
+- **Repo:** `/root/projects/my-app`
+- **Dashboard:** `https://app.mydomain.com`
+- **Database:** Supabase at `xxx.supabase.co`
+-->
+
+## 🔧 Script References
+
+<!-- Quick reference for your custom scripts -->
+<!-- Example:
+- `scripts/task` — Task management CLI
+- `scripts/status-report` — System health summary
+- `scripts/integrity-check` — File integrity monitoring
+- `scripts/mem-search` — Observation database search
+-->
+
+## 🔑 Service Notes
+
+<!-- Non-secret notes about services (no credentials!) -->
+<!-- Example:
+### Monitoring
+- BetterStack heartbeats configured in `config/betterstack-heartbeats.json`
+- Ping helper: `scripts/betterstack-ping <name>`
+
+### CI/CD
+- GitHub Actions self-hosted runner at `/home/runner/actions-runner`
+-->
+
+---
+
+*Keep this file lean. Deep docs belong in project READMEs or skill files. Only local-specific bits here.*

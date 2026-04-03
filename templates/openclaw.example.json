@@ -1,0 +1,128 @@
+{
+  "agents": {
+    "defaults": {
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "fallbackModel": "anthropic/claude-haiku-3-20250722",
+      "workspace": "/root/clawd",
+      "bootstrapFiles": [
+        "AGENTS.md",
+        "SOUL.md",
+        "IDENTITY.md",
+        "USER.md",
+        "TOOLS.md"
+      ],
+      "bootstrapMaxChars": 20000,
+      "bootstrapTotalMaxChars": 50000,
+      "imageGenerationModel": {
+        "primary": "openai/gpt-image-1"
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "name": "<YOUR_AGENT_NAME>"
+      }
+    ]
+  },
+  "channels": {
+    "discord": {
+      "token": "<YOUR_DISCORD_BOT_TOKEN>",
+      "allowedChannels": [
+        "<CHANNEL_ID>"
+      ]
+    }
+  },
+  "hooks": [
+    {
+      "name": "the-wall",
+      "path": "hooks/the-wall/index.ts",
+      "events": ["before_tool_call"],
+      "enabled": true
+    },
+    {
+      "name": "agent-firewall",
+      "path": "hooks/agent-firewall/index.ts",
+      "events": ["session_start"],
+      "enabled": true
+    },
+    {
+      "name": "auto-git-commit",
+      "path": "hooks/auto-git-commit/index.ts",
+      "events": ["after_tool_call"],
+      "enabled": true
+    },
+    {
+      "name": "llm-observer",
+      "path": "hooks/llm-observer/index.ts",
+      "events": ["after_llm_call"],
+      "enabled": true
+    },
+    {
+      "name": "message-logger",
+      "path": "hooks/message-logger/index.ts",
+      "events": ["message_sent", "message_received"],
+      "enabled": true
+    }
+  ],
+  "cron": {
+    "jobs": [
+      {
+        "id": "heartbeat",
+        "schedule": "*/30 * * * *",
+        "type": "systemEvent",
+        "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
+      },
+      {
+        "id": "morning-brief",
+        "schedule": "30 8 * * 1-5",
+        "timezone": "<YOUR_TIMEZONE>",
+        "type": "agentTurn",
+        "prompt": "Generate a morning briefing: check calendar, scan email for urgent items, summarize any overnight activity.",
+        "delivery": {
+          "type": "announce",
+          "channel": "<YOUR_CHANNEL_ID>"
+        }
+      },
+      {
+        "id": "nightly-health",
+        "schedule": "0 2 * * *",
+        "timezone": "UTC",
+        "type": "agentTurn",
+        "prompt": "Run system health check. Only report if something needs attention.",
+        "model": "<CHEAPER_MODEL>",
+        "delivery": {
+          "type": "announce",
+          "channel": "<YOUR_CHANNEL_ID>"
+        }
+      }
+    ]
+  },
+  "messages": {
+    "tts": {
+      "provider": "elevenlabs",
+      "voice": "<YOUR_VOICE_ID>",
+      "model": "eleven_multilingual_v2",
+      "auto": "inbound",
+      "fallback": {
+        "provider": "openai",
+        "voice": "fable"
+      }
+    }
+  },
+  "plugins": {
+    "entries": {
+      "device-pair": {
+        "enabled": true,
+        "config": {
+          "publicUrl": "<YOUR_GATEWAY_PUBLIC_URL>"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "bind": "0.0.0.0:18789",
+    "remote": {
+      "url": "<YOUR_GATEWAY_PUBLIC_URL>"
+    }
+  }
+}
