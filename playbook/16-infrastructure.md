@@ -2,6 +2,25 @@
 
 Your agent runs on a server. Its services — dashboard, A2A platform, webhooks, gateway — need to be reachable. This chapter covers the networking layer that ties everything together: reverse proxy, DNS, Docker networking, private access, and remote connectivity.
 
+## Read This Before You Copy Anything
+
+This chapter contains some of the sharpest knives in the whole playbook.
+
+It includes patterns that are powerful **and** easy to misuse:
+- public reverse proxies
+- agent gateway exposure
+- Docker socket access
+- browser automation tunnels
+- host↔container bridges
+
+Treat these as **advanced patterns**, not starter defaults.
+
+**Default stance:**
+- keep admin surfaces private first
+- prefer Tailscale / VPN / LAN over public exposure
+- expose only the minimum routes you actually need
+- if you're unsure, do less
+
 ## The Standard Pattern
 
 Most OpenClaw deployments converge on the same architecture:
@@ -48,6 +67,8 @@ Traefik is the standard choice because it auto-discovers Docker containers via l
 - **Hot reload** — add a new service, Traefik picks it up without restart
 
 ### Traefik Setup (Docker Compose)
+
+> **Warning:** Traefik often needs read access to the Docker socket for service discovery. That's common, but still sensitive. Treat any container with Docker socket access as high-trust infrastructure.
 
 ```yaml
 # docker-compose.traefik.yml
@@ -116,6 +137,8 @@ a2a.yourdomain.com          → A2A Comms platform (:3000)
 gateway.yourdomain.com      → OpenClaw Gateway (:18789)
 polymarket.yourdomain.com   → Polymarket dashboard (:3001)
 ```
+
+> **Safer default:** keep the gateway private if you can. Public subdomains are fine for dashboards and webhook receivers with proper auth; the agent control plane deserves more caution.
 
 Or use a playground subdomain for non-production services:
 
@@ -232,6 +255,8 @@ For services that need both directions (e.g., webhook receiver calling back to t
 - UFW rules allowing Docker subnet traffic on specific ports
 
 ## Tailscale
+
+If you only adopt one idea from this chapter, make it this one: **private-first access wins**. Tailscale is usually the cleanest way to keep the dangerous surfaces off the public internet.
 
 Tailscale provides a private mesh network between your devices — server, laptop, phone, companion Macs. No port forwarding, no firewall rules, just encrypted peer-to-peer connections.
 
@@ -360,6 +385,8 @@ The OpenClaw gateway needs to be reachable for:
 
 ### Traefik Route for Gateway
 
+> **Warning:** This is an advanced pattern, not a baseline recommendation. Publicly routing the gateway increases the blast radius of any auth or config mistake. Prefer Tailscale-only access for the gateway when possible.
+
 ```yaml
 # In your gateway docker-compose or as Traefik file config
 labels:
@@ -390,7 +417,7 @@ ufw allow 443/tcp   # HTTPS (Traefik)
 
 ### UFW + Docker Gotcha
 
-Docker bypasses UFW by default (it manipulates iptables directly). To fix:
+Docker bypasses UFW by default (it manipulates iptables directly).
 
 ```bash
 # /etc/docker/daemon.json
@@ -399,7 +426,9 @@ Docker bypasses UFW by default (it manipulates iptables directly). To fix:
 }
 ```
 
-Or use `ufw-docker` utility for more granular control. Research this before applying — disabling Docker's iptables management changes how container networking works.
+> **Danger:** do not cargo-cult this setting. Disabling Docker's iptables management changes how container networking works and can break a working host or accidentally weaken assumptions if you don't fully understand the replacement firewall path.
+
+In many cases, using `ufw-docker` or explicit firewall rules is the safer move. Research this before applying.
 
 ## Putting It All Together
 
@@ -424,12 +453,13 @@ Or use `ufw-docker` utility for more granular control. Research this before appl
 
 ### Security Considerations
 
-- **Never expose the gateway without authentication** — it controls your agent
-- **Use basic auth at minimum** for all web services
+- **Never expose the gateway casually** — it is the control plane for your agent
+- **Use authentication everywhere** — basic auth at minimum, stronger where possible
 - **Prefer Tailscale** for administrative access (dashboard, gateway)
-- **Public access only where needed** — webhooks from external services
+- **Public access only where needed** — typically webhook receivers and user-facing dashboards
 - **Rate limit public endpoints** — Traefik middleware or application-level
 - **Monitor access logs** — Traefik logs show all incoming requests
+- **Document what's public vs private** — ambiguity is where mistakes breed
 
 ---
 

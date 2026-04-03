@@ -24,6 +24,18 @@ Experienced developers who:
 - **API keys or secrets** — all credentials use `<YOUR_KEY_HERE>` placeholders
 - **Our specific configurations** — the playbook is generic. Adapt everything to your setup.
 
+## Safety Note
+
+This repository documents **power-user patterns**. Some examples involve reverse proxies, public webhooks, browser automation, SSH tunnels, Docker socket access, and agent control surfaces.
+
+Treat everything here as **infrastructure guidance for experienced operators**, not copy-paste defaults.
+
+**Strong recommendations:**
+- Prefer **private access** (Tailscale, LAN, VPN) for admin surfaces
+- Do **not** expose your agent gateway publicly unless you understand the implications
+- Never publish real tokens, hostnames, node IDs, internal routes, or production config files
+- Mark dangerous snippets in your own docs as advanced / optional, not baseline defaults
+
 ## Quick Start
 
 ```bash
@@ -95,6 +107,7 @@ This playbook is opinionated. The core beliefs:
 - **Track everything.** Rule Zero exists because autonomous agents that don't track their work become black boxes. If it happened, it should be logged.
 - **Security is non-negotiable.** The moment you give an agent access to your email, git, and infrastructure, you need defense in depth. Not paranoia — engineering.
 - **Build your own tools.** Copying someone else's hooks and scripts gives you their security assumptions without their context. Understand the pattern, then implement it yourself.
+- **Private-first beats public-by-default.** If an admin surface can live behind Tailscale or another private network, keep it there.
 
 ## Contributing
 

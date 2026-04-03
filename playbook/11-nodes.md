@@ -37,6 +37,8 @@ Browser Profiles:
 
 ### CDP (Chrome DevTools Protocol) Tunnels
 
+> **Warning:** CDP access is effectively remote control of a trusted browser session. Treat it like privileged access, because it is.
+
 To use a node's browser from the server, you need a tunnel:
 
 ```
@@ -44,6 +46,12 @@ To use a node's browser from the server, you need a tunnel:
 ```
 
 The agent connects to `localhost:9222` on the server, which tunnels to the node's Chrome instance. This gives full browser automation capabilities — navigation, clicking, typing, screenshots, DOM inspection — all on a real browser that websites trust.
+
+That power is exactly why you should keep it tightly scoped:
+- use a dedicated browser profile, not the human's main browser
+- restrict tunnel exposure to the server only
+- prefer Tailscale or other private networking over public reachability
+- assume anyone who gets CDP access effectively gets the browser session
 
 ### Persistent Browser Sessions
 
