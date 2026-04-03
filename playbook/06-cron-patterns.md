@@ -53,29 +53,34 @@ Cron jobs fire at exact times and run in isolated sessions by default.
 
 ## Cron Job Configuration
 
-### Job Types
+### Payload Types
 
-| Type | Behavior |
+| Payload Kind | Behavior |
 |------|----------|
 | `systemEvent` | Fires into the main session (like a heartbeat but at exact time) |
 | `agentTurn` | Fires into an isolated session (independent context) |
 
 ### Session Targeting
 
-| Target | Description |
+| `sessionTarget` | Description |
 |--------|-------------|
 | `main` | The agent's main session |
 | `isolated` | A fresh isolated session (default for agentTurn) |
-| `current` | The currently active session (rare) |
-| `session:<id>` | A specific named session |
+
+### Schedule Kinds
+
+| Kind | Fields | Description |
+|------|--------|-------------|
+| `cron` | `expr`, optional `tz` | Standard cron expression with optional timezone |
+| `every` | `everyMs`, optional `anchorMs` | Interval-based (every N milliseconds) |
+| `at` | `at` (ISO timestamp) | One-shot at a specific time |
 
 ### Delivery Options
 
-| Option | Description |
+| Mode | Description |
 |--------|-------------|
-| `none` | No output delivery (fire and forget) |
+| (omitted) | No output delivery (fire and forget) |
 | `announce` | Deliver output to a specific channel (Discord, Telegram, etc.) |
-| `webhook` | POST output to a URL |
 
 ### Example Cron Configurations
 
@@ -83,12 +88,22 @@ Cron jobs fire at exact times and run in isolated sessions by default.
 ```json
 {
   "id": "morning-brief",
-  "schedule": "30 8 * * 1-5",
-  "timezone": "Europe/Paris",
-  "type": "agentTurn",
-  "prompt": "Generate a morning briefing: check calendar for today's events, scan email for anything urgent, check market pre-open for any positions that need attention. Deliver a concise summary.",
+  "name": "Morning Briefing",
+  "enabled": true,
+  "schedule": {
+    "kind": "cron",
+    "expr": "30 8 * * 1-5",
+    "tz": "<YOUR_TIMEZONE>"
+  },
+  "sessionTarget": "isolated",
+  "payload": {
+    "kind": "agentTurn",
+    "message": "Generate a morning briefing: check calendar for today's events, scan email for anything urgent, check market pre-open for any positions that need attention. Deliver a concise summary.",
+    "model": "anthropic/claude-sonnet-4-6",
+    "timeoutSeconds": 600
+  },
   "delivery": {
-    "type": "announce",
+    "mode": "announce",
     "channel": "<YOUR_CHANNEL_ID>"
   }
 }
@@ -98,13 +113,22 @@ Cron jobs fire at exact times and run in isolated sessions by default.
 ```json
 {
   "id": "nightly-health",
-  "schedule": "0 2 * * *",
-  "timezone": "UTC",
-  "type": "agentTurn",
-  "prompt": "Run system health check: Docker containers, disk space, cron job status, recent error logs. Only report if something needs attention.",
-  "model": "<CHEAPER_MODEL>",
+  "name": "Nightly Health Check",
+  "enabled": true,
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 2 * * *",
+    "tz": "UTC"
+  },
+  "sessionTarget": "isolated",
+  "payload": {
+    "kind": "agentTurn",
+    "message": "Run system health check: Docker containers, disk space, cron job status, recent error logs. Only report if something needs attention.",
+    "model": "<CHEAPER_MODEL>",
+    "timeoutSeconds": 300
+  },
   "delivery": {
-    "type": "announce",
+    "mode": "announce",
     "channel": "<YOUR_CHANNEL_ID>"
   }
 }
@@ -114,24 +138,40 @@ Cron jobs fire at exact times and run in isolated sessions by default.
 ```json
 {
   "id": "integrity-check",
-  "schedule": "0 */6 * * *",
-  "type": "agentTurn",
-  "prompt": "Run integrity-check check. If any files have unexpected changes, report immediately. Otherwise, stay silent.",
+  "name": "Integrity Monitor",
+  "enabled": true,
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 */6 * * *"
+  },
+  "sessionTarget": "isolated",
+  "payload": {
+    "kind": "agentTurn",
+    "message": "Run integrity-check. If any files have unexpected changes, report immediately. Otherwise, stay silent.",
+    "timeoutSeconds": 300
+  },
   "delivery": {
-    "type": "announce",
+    "mode": "announce",
     "channel": "<YOUR_SECURITY_CHANNEL_ID>"
   }
 }
 ```
 
-**One-shot reminder:**
+**One-shot reminder (using "at" schedule):**
 ```json
 {
   "id": "reminder-abc123",
-  "schedule": "0 15 3 4 *",
-  "type": "systemEvent",
-  "prompt": "Remind: the deployment window opens in 1 hour. Review the checklist.",
-  "once": true
+  "name": "Deployment Reminder",
+  "enabled": true,
+  "schedule": {
+    "kind": "at",
+    "at": "2026-04-03T15:00:00Z"
+  },
+  "sessionTarget": "main",
+  "payload": {
+    "kind": "systemEvent",
+    "text": "Remind: the deployment window opens in 1 hour. Review the checklist."
+  }
 }
 ```
 
@@ -139,12 +179,21 @@ Cron jobs fire at exact times and run in isolated sessions by default.
 ```json
 {
   "id": "weekly-cost-report",
-  "schedule": "0 9 * * 1",
-  "timezone": "Europe/Paris",
-  "type": "agentTurn",
-  "prompt": "Generate weekly LLM cost report from observer logs. Compare to last week. Highlight any unusual spending patterns.",
+  "name": "Weekly Cost Report",
+  "enabled": true,
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 9 * * 1",
+    "tz": "<YOUR_TIMEZONE>"
+  },
+  "sessionTarget": "isolated",
+  "payload": {
+    "kind": "agentTurn",
+    "message": "Generate weekly LLM cost report from observer logs. Compare to last week. Highlight any unusual spending patterns.",
+    "timeoutSeconds": 600
+  },
   "delivery": {
-    "type": "announce",
+    "mode": "announce",
     "channel": "<YOUR_CHANNEL_ID>"
   }
 }

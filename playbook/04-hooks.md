@@ -255,6 +255,8 @@ Verifies message integrity — detects tampering or unexpected modifications to 
 - `delegation-audit` — logs every sub-agent spawn with context (who spawned it, why, what task)
 - `delegation-policy` — enforces rules about sub-agent spawning (limits, allowed operations, required task tracking)
 
+Cross-reference: see [Chapter 13](13-sub-agents.md) for the full sub-agent orchestration model — when to spawn, parallel execution patterns, verification, and the "create task before spawning" rule.
+
 ## A2A Hooks (Agent-to-Agent)
 
 If you're running agent-to-agent communication (see Chapter 12):
@@ -279,6 +281,15 @@ Comprehensive logging of inter-agent communication for security review and debug
 **Trigger:** A2A context events.
 
 Ensures that work triggered by other agents is properly tracked in the task system. Prevents "invisible work" that doesn't appear in the dashboard.
+
+## Hooks vs Skills
+
+A common point of confusion: hooks and skills are different mechanisms.
+
+- **Hooks** run automatically at the platform level. The agent doesn't choose to trigger them — they fire on events (tool calls, session starts, messages). The agent can't bypass them.
+- **Skills** are instruction sets the agent reads on demand. They teach the agent how to use tools and APIs. The agent chooses when to load them.
+
+Use hooks for enforcement (security, automation, logging). Use skills for guidance (tool instructions, workflow procedures). See [Chapter 14](14-skills.md) for the full skills system.
 
 ## Building Your Own Hooks
 

@@ -68,30 +68,57 @@
     "jobs": [
       {
         "id": "heartbeat",
-        "schedule": "*/30 * * * *",
-        "type": "systemEvent",
-        "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
+        "name": "Heartbeat",
+        "enabled": true,
+        "schedule": {
+          "kind": "cron",
+          "expr": "*/30 * * * *"
+        },
+        "sessionTarget": "main",
+        "payload": {
+          "kind": "systemEvent",
+          "text": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
+        }
       },
       {
         "id": "morning-brief",
-        "schedule": "30 8 * * 1-5",
-        "timezone": "<YOUR_TIMEZONE>",
-        "type": "agentTurn",
-        "prompt": "Generate a morning briefing: check calendar, scan email for urgent items, summarize any overnight activity.",
+        "name": "Morning Briefing",
+        "enabled": true,
+        "schedule": {
+          "kind": "cron",
+          "expr": "30 8 * * 1-5",
+          "tz": "<YOUR_TIMEZONE>"
+        },
+        "sessionTarget": "isolated",
+        "payload": {
+          "kind": "agentTurn",
+          "message": "Generate a morning briefing: check calendar, scan email for urgent items, summarize any overnight activity.",
+          "model": "anthropic/claude-sonnet-4-6",
+          "timeoutSeconds": 600
+        },
         "delivery": {
-          "type": "announce",
+          "mode": "announce",
           "channel": "<YOUR_CHANNEL_ID>"
         }
       },
       {
         "id": "nightly-health",
-        "schedule": "0 2 * * *",
-        "timezone": "UTC",
-        "type": "agentTurn",
-        "prompt": "Run system health check. Only report if something needs attention.",
-        "model": "<CHEAPER_MODEL>",
+        "name": "Nightly Health Check",
+        "enabled": true,
+        "schedule": {
+          "kind": "cron",
+          "expr": "0 2 * * *",
+          "tz": "UTC"
+        },
+        "sessionTarget": "isolated",
+        "payload": {
+          "kind": "agentTurn",
+          "message": "Run system health check. Only report if something needs attention.",
+          "model": "<CHEAPER_MODEL>",
+          "timeoutSeconds": 300
+        },
         "delivery": {
-          "type": "announce",
+          "mode": "announce",
           "channel": "<YOUR_CHANNEL_ID>"
         }
       }

@@ -175,27 +175,4 @@ The specifics depend on the A2A platform version and deployment. Check the platf
 
 ---
 
-*Previous: [Chapter 11 — Nodes](11-nodes.md)*
-
----
-
-## Playbook Complete
-
-You've reached the end of the OpenClaw Playbook. Here's the full implementation path:
-
-1. **Foundations** (Ch 1) — Set up workspace, customize identity files
-2. **Memory** (Ch 2) — Install claude-mem, configure daily notes
-3. **Tasks** (Ch 3) — Build the task CLI, enforce Rule Zero
-4. **Hooks** (Ch 4) — Build security hooks first, then automation
-5. **Security** (Ch 5) — Implement defense in depth
-6. **Crons** (Ch 6) — Set up heartbeats and essential cron jobs
-7. **Scripts** (Ch 7) — Build your utility toolkit
-8. **Dashboard** (Ch 8) — Create visibility into agent activity
-9. **Config** (Ch 9) — Finalize and backup your configuration
-10. **Clones** (Ch 10) — Scale to additional instances when ready
-11. **Nodes** (Ch 11) — Connect companion devices
-12. **A2A** (Ch 12) — Enable inter-agent collaboration
-
-Build incrementally. Start with chapters 1-5, get stable, then expand. The best agent infrastructure is the one that compounds over time — each layer you add makes everything else more effective.
-
-Good luck building. 🦞
+*Previous: [Chapter 11 — Nodes](11-nodes.md) | Next: [Chapter 13 — Sub-Agent Orchestration](13-sub-agents.md)*

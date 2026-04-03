@@ -35,7 +35,7 @@ chmod +x setup.sh
 ./setup.sh
 
 # Start reading
-# The playbook is ordered — read chapters 01 through 12 sequentially
+# The playbook is ordered — read chapters 01 through 15 sequentially
 ```
 
 ## Structure
@@ -57,7 +57,10 @@ openclaw-playbook/
 │   ├── 09-config.md       ← openclaw.json & environment setup
 │   ├── 10-clones.md       ← Multi-instance deployments
 │   ├── 11-nodes.md        ← Companion devices & browser profiles
-│   └── 12-a2a-comms.md   ← Agent-to-agent communication
+│   ├── 12-a2a-comms.md   ← Agent-to-agent communication
+│   ├── 13-sub-agents.md  ← Sub-agent orchestration & parallel work
+│   ├── 14-skills.md      ← Skills system & on-demand instructions
+│   └── 15-context-management.md ← Context windows & compaction resilience
 ├── templates/             ← Ready-to-use workspace files
 │   ├── AGENTS.md          ← Main instruction set template
 │   ├── SOUL.md            ← Personality & behavioral guardrails
@@ -69,13 +72,14 @@ openclaw-playbook/
 │   └── openclaw.example.json ← Configuration skeleton
 └── schemas/               ← Interface specifications
     ├── task-cli.md        ← Task CLI full interface spec
-    └── memory-conventions.md ← Memory file formats & conventions
+    ├── memory-conventions.md ← Memory file formats & conventions
+    └── project-template.md ← Project file format specification
 ```
 
 ## How to Use This
 
 1. **Run `setup.sh`** — creates your workspace directory structure and copies templates
-2. **Read the playbook in order** — each chapter builds on the previous one
+2. **Read the playbook in order** — each chapter builds on the previous ones
 3. **Customize templates** — the files in `templates/` are starting points; make them yours
 4. **Build your tools** — use the schemas and interface specs to build compatible scripts
 5. **Iterate** — your agent's infrastructure will evolve. That's the point.

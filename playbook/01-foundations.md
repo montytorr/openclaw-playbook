@@ -164,7 +164,7 @@ Why this file exists: without it, your agent defaults to "helpful assistant" mod
 SOUL.md defines:
 
 - **Core truths** — strong opinions, brevity, resourcefulness, honesty. These are the non-negotiable behavioral principles. Example: "Never open with 'Great question!' — just answer."
-- **Behavioral lessons** — hard-won patterns like "execute don't instruct" (do the work, don't hand back terminal commands), "verify don't trust" (sub-agents lie, check their output), "proactive over reactive" (fix things before being asked).
+- **Behavioral lessons** — hard-won patterns like "execute don't instruct" (do the work, don't hand back terminal commands), "verify don't trust" (sub-agents lie, check their output — see [Chapter 13](13-sub-agents.md)), "proactive over reactive" (fix things before being asked).
 - **Boundaries** — what the agent will and won't do without permission.
 - **Vibe** — the personality. This is where you define character. Dry wit? Formal? Casual? Sardonic? Pick a voice and commit to it. A well-defined personality is a quality filter.
 - **Continuity** — reminder that files are memory; read them, update them.

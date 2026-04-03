@@ -136,20 +136,38 @@ Hook paths are relative to the workspace. Register hooks in priority order — s
     "jobs": [
       {
         "id": "morning-brief",
-        "schedule": "30 8 * * 1-5",
-        "timezone": "Europe/Paris",
-        "type": "agentTurn",
-        "prompt": "Generate morning briefing...",
+        "name": "Morning Briefing",
+        "enabled": true,
+        "schedule": {
+          "kind": "cron",
+          "expr": "30 8 * * 1-5",
+          "tz": "<YOUR_TIMEZONE>"
+        },
+        "sessionTarget": "isolated",
+        "payload": {
+          "kind": "agentTurn",
+          "message": "Generate morning briefing...",
+          "model": "anthropic/claude-sonnet-4-6",
+          "timeoutSeconds": 600
+        },
         "delivery": {
-          "type": "announce",
+          "mode": "announce",
           "channel": "<CHANNEL_ID>"
         }
       },
       {
         "id": "heartbeat",
-        "schedule": "*/30 * * * *",
-        "type": "systemEvent",
-        "prompt": "Read HEARTBEAT.md if it exists..."
+        "name": "Heartbeat",
+        "enabled": true,
+        "schedule": {
+          "kind": "cron",
+          "expr": "*/30 * * * *"
+        },
+        "sessionTarget": "main",
+        "payload": {
+          "kind": "systemEvent",
+          "text": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
+        }
       }
     ]
   }

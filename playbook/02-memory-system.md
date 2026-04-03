@@ -4,7 +4,11 @@ Your agent wakes up fresh every session. Without a memory system, it's perpetual
 
 ## The Problem
 
-LLM sessions are stateless. Context windows are finite. When a session ends or the context fills up, everything the agent learned, decided, or discovered vanishes. The memory system solves this with three layers:
+LLM sessions are stateless. Context windows are finite. When a session ends or the context fills up, everything the agent learned, decided, or discovered vanishes. During long sessions, OpenClaw automatically compacts older messages — summarizing them to free context space. Details are lost in the process. The memory system exists to make sure nothing important is permanently gone.
+
+Cross-reference: see [Chapter 15](15-context-management.md) for the full context management model — what happens during compaction, how to structure work for resilience, and bootstrap file sizing.
+
+The memory system solves the continuity problem with three layers:
 
 1. **Daily notes** — raw, timestamped logs written throughout each day
 2. **MEMORY.md** — an auto-generated semantic index of important observations
