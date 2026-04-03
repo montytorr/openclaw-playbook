@@ -15,6 +15,7 @@ Experienced developers who:
 - **Workspace structure** — a proven directory layout for agent memory, projects, scripts, and security
 - **Identity templates** — ready-to-customize files that give your agent personality, memory, and behavioral guardrails
 - **System documentation** — detailed descriptions of every operational pattern: hooks, crons, task tracking, security gates, dashboards, and more
+- **Memory architecture** — the hybrid markdown + SQLite observation model that gives the agent real continuity
 - **Interface specifications** — enough detail to build compatible tools without copying our code
 
 ## What You Don't Get
@@ -90,7 +91,7 @@ openclaw-playbook/
 This playbook is opinionated. The core beliefs:
 
 - **Agents need identity, not just instructions.** A SOUL.md that defines personality prevents corporate bot syndrome and makes your agent genuinely useful to interact with.
-- **Memory is infrastructure.** Without a proper memory system, every session starts from zero. Daily notes + auto-indexing = continuity.
+- **Memory is infrastructure.** Without a proper memory system, every session starts from zero. The real breakthrough is the hybrid model: markdown for narrative continuity, SQLite for observation storage and retrieval, and `MEMORY.md` as the operator-facing digest.
 - **Track everything.** Rule Zero exists because autonomous agents that don't track their work become black boxes. If it happened, it should be logged.
 - **Security is non-negotiable.** The moment you give an agent access to your email, git, and infrastructure, you need defense in depth. Not paranoia — engineering.
 - **Build your own tools.** Copying someone else's hooks and scripts gives you their security assumptions without their context. Understand the pattern, then implement it yourself.
