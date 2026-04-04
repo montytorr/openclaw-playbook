@@ -13,6 +13,9 @@ Scripts should be:
 
 Keep scripts in `scripts/` at the workspace root. Use any language — bash, Python, Node.js — whatever you're comfortable maintaining. The agent calls them via `exec`, so the interface is the command line.
 
+If you're starting from zero, the repo now includes tiny runnable references in `reference/scripts/`.
+They are intentionally minimal — just enough to make the playbook executable.
+
 ## System Scripts
 
 ### `status-report` — System Health Summary
@@ -199,13 +202,15 @@ mem-search "trading" --after 2026-03-01 --category decision
 get-observations 42 43 44
 ```
 
-Cross-reference: see Chapter 2 for the full memory system.
+Cross-reference: see Chapter 2 for the full memory system. For a minimal working example, see `reference/scripts/mem-extract` and `reference/scripts/mem-search`.
 
 ## Operational Scripts
 
 ### `task` — Task Management CLI
 
 The primary task tracking interface. Fully documented in Chapter 3.
+
+For a minimal working example, see `reference/scripts/task`.
 
 ```bash
 task start "Title" "Input" [category] [priority]

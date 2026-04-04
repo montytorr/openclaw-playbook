@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+import os
+import sqlite3
+import sys
+from pathlib import Path
+
+DB = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "clawd"))) / "data" / "agent.db"
+
+if len(sys.argv) < 2:
+    sys.exit("usage: mem-search <query>")
+
+query = " ".join(sys.argv[1:])
+conn = sqlite3.connect(DB)
+conn.row_factory = sqlite3.Row
+rows = conn.execute(
+    """
+    SELECT o.id, o.source_date, o.category, o.content
+    FROM observations_fts f
+    JOIN observations o ON o.id = f.rowid
+    WHERE observations_fts MATCH ?
+    ORDER BY o.importance DESC, o.source_date DESC
+    LIMIT 20
+    """,
+    (query,),
+)
+for row in rows:
+    print(f"[{row['id']}] {row['source_date']} {row['category']}: {row['content']}")

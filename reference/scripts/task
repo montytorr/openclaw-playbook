@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+import hashlib
+import sqlite3
+import sys
+from pathlib import Path
+
+WORKSPACE_ROOT = Path((__import__('os').environ.get('WORKSPACE_ROOT') or (Path.home() / 'clawd')))
+DB_PATH = WORKSPACE_ROOT / "data" / "agent.db"
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    input TEXT,
+    output TEXT,
+    status TEXT NOT NULL DEFAULT 'planned'
+        CHECK (status IN ('in-progress', 'done', 'planned')),
+    category TEXT NOT NULL DEFAULT 'other',
+    priority TEXT NOT NULL DEFAULT 'medium'
+        CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_category ON tasks(category);
+CREATE INDEX IF NOT EXISTS idx_tasks_updated ON tasks(updated_at DESC);
+"""
+
+
+def conn():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    c = sqlite3.connect(DB_PATH)
+    c.row_factory = sqlite3.Row
+    c.executescript(SCHEMA)
+    return c
+
+
+def make_id(*parts):
+    h = hashlib.sha256("|".join(parts).encode()).hexdigest()
+    return h[:8]
+
+
+def usage():
+    print("usage: task <start|done|plan|update|set-input|list|show|search> ...", file=sys.stderr)
+    sys.exit(1)
+
+
+def cmd_start(args):
+    title = args[0]
+    input_text = args[1] if len(args) > 1 else None
+    category = args[2] if len(args) > 2 else "other"
+    priority = args[3] if len(args) > 3 else "medium"
+    task_id = make_id(title, input_text or "", category, priority)
+    with conn() as c:
+        c.execute(
+            "INSERT INTO tasks (id, title, input, status, category, priority) VALUES (?, ?, ?, 'in-progress', ?, ?)",
+            (task_id, title, input_text, category, priority),
+        )
+    print(task_id)
+
+
+def cmd_done(args):
+    title = args[0]
+    input_text = args[1] if len(args) > 1 else None
+    output = args[2] if len(args) > 2 else None
+    category = args[3] if len(args) > 3 else "other"
+    with conn() as c:
+        row = c.execute(
+            "SELECT id FROM tasks WHERE status='in-progress' AND title=? ORDER BY updated_at DESC LIMIT 1",
+            (title,),
+        ).fetchone()
+        if row:
+            c.execute(
+                "UPDATE tasks SET status='done', output=?, updated_at=datetime('now') WHERE id=?",
+                (output, row["id"]),
+            )
+            print(row["id"])
+        else:
+            task_id = make_id(title, input_text or "", output or "", category)
+            c.execute(
+                "INSERT INTO tasks (id, title, input, output, status, category) VALUES (?, ?, ?, ?, 'done', ?)",
+                (task_id, title, input_text, output, category),
+            )
+            print(task_id)
+
+
+def cmd_plan(args):
+    title = args[0]
+    input_text = args[1] if len(args) > 1 else None
+    category = args[2] if len(args) > 2 else "other"
+    task_id = make_id(title, input_text or "", category, "planned")
+    with conn() as c:
+        c.execute(
+            "INSERT INTO tasks (id, title, input, status, category) VALUES (?, ?, ?, 'planned', ?)",
+            (task_id, title, input_text, category),
+        )
+    print(task_id)
+
+
+def cmd_update(args):
+    task_id, status = args[0], args[1]
+    desc = args[2] if len(args) > 2 else None
+    with conn() as c:
+        if status == "done" and desc is not None:
+            c.execute("UPDATE tasks SET status=?, output=?, updated_at=datetime('now') WHERE id=?", (status, desc, task_id))
+        else:
+            c.execute("UPDATE tasks SET status=?, updated_at=datetime('now') WHERE id=?", (status, task_id))
+    print(task_id)
+
+
+def cmd_set_input(args):
+    task_id, input_text = args[0], args[1]
+    with conn() as c:
+        c.execute("UPDATE tasks SET input=?, updated_at=datetime('now') WHERE id=?", (input_text, task_id))
+    print(task_id)
+
+
+def cmd_list(args):
+    status = None
+    limit = 10
+    i = 0
+    while i < len(args):
+        if args[i] == "--limit":
+            limit = int(args[i+1]); i += 2
+        else:
+            status = args[i]; i += 1
+    q = "SELECT id, status, category, title, updated_at FROM tasks"
+    params = []
+    if status:
+        q += " WHERE status=?"
+        params.append(status)
+    q += " ORDER BY updated_at DESC LIMIT ?"
+    params.append(limit)
+    with conn() as c:
+        for row in c.execute(q, params):
+            print(f"{row['id']}\t{row['status']}\t{row['category']}\t{row['title']}\t{row['updated_at']}")
+
+
+def cmd_show(args):
+    with conn() as c:
+        row = c.execute("SELECT * FROM tasks WHERE id=?", (args[0],)).fetchone()
+        if not row:
+            sys.exit("task not found")
+        for k in row.keys():
+            print(f"{k}: {row[k]}")
+
+
+def cmd_search(args):
+    q = "%" + args[0] + "%"
+    with conn() as c:
+        for row in c.execute("SELECT id, status, title FROM tasks WHERE title LIKE ? OR input LIKE ? OR output LIKE ? ORDER BY updated_at DESC LIMIT 20", (q, q, q)):
+            print(f"{row['id']}\t{row['status']}\t{row['title']}")
+
+
+COMMANDS = {
+    "start": cmd_start,
+    "done": cmd_done,
+    "plan": cmd_plan,
+    "update": cmd_update,
+    "set-input": cmd_set_input,
+    "list": cmd_list,
+    "show": cmd_show,
+    "search": cmd_search,
+}
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
+        usage()
+    COMMANDS[sys.argv[1]](sys.argv[2:])

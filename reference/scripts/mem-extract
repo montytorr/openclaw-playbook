@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+import os
+import re
+import sqlite3
+from pathlib import Path
+
+ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "clawd")))
+MEMORY_DIR = ROOT / "memory"
+DB = ROOT / "data" / "agent.db"
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS observations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'context',
+    importance REAL NOT NULL DEFAULT 0.5,
+    source_file TEXT NOT NULL,
+    source_date TEXT NOT NULL,
+    extracted_at TEXT NOT NULL DEFAULT (datetime('now')),
+    tags TEXT
+);
+CREATE VIRTUAL TABLE IF NOT EXISTS observations_fts USING fts5(content, content='observations', content_rowid='id');
+CREATE TRIGGER IF NOT EXISTS observations_ai AFTER INSERT ON observations BEGIN
+  INSERT INTO observations_fts(rowid, content) VALUES (new.id, new.content);
+END;
+"""
+
+CATEGORY_RULES = {
+    "decision": ["decided", "chose", "decision"],
+    "discovery": ["learned", "discovered", "found that"],
+    "change": ["updated", "changed", "added", "removed", "migrated"],
+    "error": ["error", "failed", "broke", "incident", "bug"],
+    "person": ["met with", "talked to", "person"],
+}
+
+
+def classify(text: str) -> str:
+    lower = text.lower()
+    for category, needles in CATEGORY_RULES.items():
+        if any(n in lower for n in needles):
+            return category
+    return "context"
+
+
+def importance(text: str) -> float:
+    score = 0.4
+    if any(w in text.lower() for w in ["decision", "incident", "security", "migrated", "critical"]):
+        score += 0.3
+    if len(text) > 140:
+        score += 0.1
+    return min(score, 1.0)
+
+
+def main():
+    DB.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB)
+    conn.executescript(SCHEMA)
+    for file in sorted(MEMORY_DIR.glob('20*.md')):
+      text = file.read_text(errors='ignore')
+      bullets = re.findall(r'^-\s+(.*)$', text, flags=re.M)
+      for bullet in bullets:
+          bullet = bullet.strip()
+          if not bullet:
+              continue
+          conn.execute(
+              "INSERT INTO observations (content, category, importance, source_file, source_date) VALUES (?, ?, ?, ?, ?)",
+              (bullet, classify(bullet), importance(bullet), str(file.relative_to(ROOT)), file.stem),
+          )
+    conn.commit()
+    print('ok')
+
+
+if __name__ == '__main__':
+    main()

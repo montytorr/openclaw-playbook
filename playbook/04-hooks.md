@@ -44,6 +44,9 @@ You'll notice this playbook describes patterns and interfaces, not production co
 3. **You'll understand it better if you build it.** Copying code creates false confidence. Building from a pattern description forces you to think through edge cases.
 
 Where possible, the playbook should show enough structure that you can build a reference version without guessing.
+Minimal runnable hook skeletons live in `reference/hooks/`.
+Use them as scaffolding, not as finished security controls.
+
 ## Security Hooks
 
 ### `the-wall` — Before Tool Call Gate

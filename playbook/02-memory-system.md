@@ -169,6 +169,11 @@ This is why the system works so well:
 - **SQLite is the retrieval engine**
 - **MEMORY.md is the compressed operator-facing digest**
 
+If you want a minimal runnable starting point, see:
+- `reference/scripts/mem-extract`
+- `reference/scripts/mem-search`
+- `docs/validation.md`
+
 ### Setup
 
 ```bash

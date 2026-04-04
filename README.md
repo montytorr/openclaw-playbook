@@ -19,10 +19,12 @@ Experienced developers who:
 - **System documentation** — detailed descriptions of every operational pattern: hooks, crons, task tracking, security gates, dashboards, and more
 - **Memory architecture** — the hybrid markdown + SQLite observation model that gives the agent real continuity
 - **Interface specifications** — enough detail to build compatible tools without copying our code
+- **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
+- **Validation docs** — smoke tests for proving the loop actually works
 
 ## What You Don't Get
 
-- **Actual implementation code** — we describe patterns and interfaces; you build your own. This is intentional: the playbook focuses on transferable patterns, while your concrete implementations should match your threat model and operating environment.
+- **Full production implementation code** — this is not a copy of our live runtime. The included references are intentionally minimal and educational, not hardened drop-ins.
 - **API keys or secrets** — all credentials use `<YOUR_KEY_HERE>` placeholders
 - **Our specific configurations** — the playbook is generic. Adapt everything to your setup.
 
@@ -86,6 +88,13 @@ openclaw-playbook/
 │   ├── TOOLS.md           ← Local tool & infrastructure notes
 │   ├── SECURITY.md        ← Security rules & protocols
 │   └── openclaw.example.json ← Configuration skeleton
+├── reference/             ← Minimal runnable starter artifacts
+│   ├── README.md          ← How to use the references
+│   ├── hooks/             ← Hook skeleton examples
+│   └── scripts/           ← Tiny task/memory reference scripts
+├── docs/                  ← Condensed onboarding & validation
+│   ├── one-pager.md       ← Fast-start summary
+│   └── validation.md      ← Smoke tests for the operating loop
 └── schemas/               ← Interface specifications
     ├── task-cli.md        ← Task CLI full interface spec
     ├── memory-conventions.md ← Memory file formats & conventions
@@ -106,10 +115,12 @@ That gives you continuity, visibility, a timing loop, and a perimeter. Add the r
 ## How to Use This
 
 1. **Run `setup.sh`** — creates your workspace directory structure and copies templates
-2. **Read the playbook in order** — each chapter builds on the previous ones
-3. **Customize templates** — the files in `templates/` are starting points; make them yours
-4. **Build your tools** — use the schemas and interface specs to build compatible scripts
-5. **Iterate** — your agent's infrastructure will evolve. That's the point.
+2. **Read `docs/one-pager.md`** — get the operating loop in your head fast
+3. **Read the playbook in order** — each chapter builds on the previous ones
+4. **Customize templates** — the files in `templates/` are starting points; make them yours
+5. **Use `reference/` for starter implementations** — task CLI, memory extractor/search, hook skeletons
+6. **Run `docs/validation.md`** — prove the loop works
+7. **Iterate** — your agent's infrastructure will evolve. That's the point.
 
 ## Philosophy
 

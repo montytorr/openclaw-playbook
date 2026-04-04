@@ -19,6 +19,8 @@ The task management system is a CLI tool backed by SQLite. No HTTP API, no exter
 
 ### Interface
 
+If you want a tiny starting point instead of building from zero, see `reference/scripts/task` in the repo. It is intentionally small, but it proves the loop is executable.
+
 ```bash
 # Start work on something
 task start "Title" "What's being requested" [category] [priority]
@@ -176,7 +178,7 @@ The task system connects to several other systems:
 
 ## What to Build
 
-- [ ] Build the `task` CLI script (see schema above for the interface)
+- [ ] Build or adapt the `task` CLI script (see `reference/scripts/task` for a minimal starting point)
 - [ ] Create the SQLite database with the tasks schema
 - [ ] Add Rule Zero to your AGENTS.md (see template)
 - [ ] Build anti-pollution cron job for stale task cleanup
