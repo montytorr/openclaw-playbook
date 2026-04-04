@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""Educational scaffold, not production hardened.
+
+Repo-local verification for the playbook reference artifacts.
+"""
+
+import os
+import sqlite3
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+ENV = dict(os.environ)
+
+
+def run(cmd, cwd=None, env=None):
+    print("+", " ".join(cmd))
+    subprocess.run(cmd, cwd=cwd or REPO, env=env or ENV, check=True)
+
+
+def capture(cmd, cwd=None, env=None):
+    return subprocess.check_output(cmd, cwd=cwd or REPO, env=env or ENV, text=True)
+
+
+def main():
+    run(["bash", "-n", "setup.sh"])
+    run([sys.executable, "-m", "py_compile", "reference/scripts/task", "reference/scripts/mem-extract", "reference/scripts/mem-search", "reference/scripts/verify"])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        (root / "memory").mkdir()
+        (root / "data").mkdir()
+        env = dict(ENV)
+        env["WORKSPACE_ROOT"] = str(root)
+
+        task_id = capture(["reference/scripts/task", "start", "Validation task", "Smoke test", "other"], env=env).strip()
+        task_id_2 = capture(["reference/scripts/task", "start", "Validation task", "Smoke test", "other"], env=env).strip()
+        assert task_id == task_id_2, "task start should be idempotent for same in-progress task"
+
+        run(["reference/scripts/task", "update", task_id, "done", "Completed validation"], env=env)
+        show = capture(["reference/scripts/task", "show", task_id], env=env)
+        assert "status: done" in show
+
+        # sprint + delete contract
+        run(["reference/scripts/task", "plan", "Plan task", "Future work", "other"], env=env)
+        sprint = capture(["reference/scripts/task", "sprint"], env=env)
+        assert "=== other ===" in sprint
+        run(["reference/scripts/task", "delete", task_id], env=env)
+
+        note = root / "memory" / "2026-04-04.md"
+        note.write_text("# 2026-04-04\n\n## 10:00 — Validation\n- Decided to keep heartbeat checks lean.\n- Fixed a startup path mismatch in setup.sh.\n")
+        run(["reference/scripts/mem-extract"], env=env)
+        run(["reference/scripts/mem-extract"], env=env)
+
+        db = sqlite3.connect(root / "data" / "agent.db")
+        count = db.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
+        assert count == 2, f"expected 2 unique observations, got {count}"
+        search = capture(["reference/scripts/mem-search", "heartbeat"], env=env)
+        assert "heartbeat" in search.lower()
+
+    print("verify: ok")
+
+
+if __name__ == "__main__":
+    main()

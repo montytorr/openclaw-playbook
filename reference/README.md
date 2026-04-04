@@ -2,6 +2,8 @@
 
 These are **minimal starter artifacts**, not production-ready drop-ins.
 
+**Repeat that to yourself before copying them into production.** They are educational scaffolds meant to prove the loop is executable.
+
 Use them to reduce blank-page friction:
 
 By default they assume `~/clawd` as the workspace root. Override with:
@@ -15,6 +17,7 @@ WORKSPACE_ROOT=/path/to/workspace <script>
 - `scripts/mem-search` — FTS-backed search over observations
 - `hooks/the-wall.example.ts` — secret scan + destructive-exec gate skeleton
 - `hooks/task-enforcer.example.ts` — tiny reminder-style enforcement skeleton
+- `scripts/verify` — smoke-test script for the starter references
 
 ## Philosophy
 

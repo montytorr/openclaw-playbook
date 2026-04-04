@@ -21,7 +21,8 @@ task start <title> [input] [category] [priority]
 
 **Behavior:**
 - Creates a new task with status `in-progress`
-- Generates a unique ID (8-character hash recommended)
+- Generates a unique short ID (8-character IDs are fine)
+- Must be conflict-safe: repeated identical `start` calls should either return the existing in-progress task or generate a new non-colliding ID without crashing
 - Sets `created_at` and `updated_at` to current timestamp
 - Prints the task ID for reference
 
@@ -224,16 +225,12 @@ CREATE INDEX IF NOT EXISTS idx_tasks_updated ON tasks(updated_at DESC);
 
 ## ID Generation
 
-Recommended: 8-character hex hash.
+Use a short unique ID (8 chars is practical). Two sane patterns:
 
-```
-SHA-256(title + timestamp) → first 8 chars
-```
+1. **Random short ID** (UUID-derived)
+2. **Deterministic-with-conflict-handling**
 
-This provides:
-- Short enough to type/reference in conversation
-- Unique enough for practical purposes (16^8 = 4 billion possibilities)
-- Deterministic (same input at same time = same ID, but collision is unlikely)
+The important rule is not the generator — it's that the CLI must **not crash on duplicate starts or collisions**.
 
 ## Status Transitions
 

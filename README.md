@@ -21,6 +21,7 @@ Experienced developers who:
 - **Interface specifications** — enough detail to build compatible tools without copying our code
 - **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
 - **Validation docs** — smoke tests for proving the loop actually works
+- **Smoke-test script** — a bundled verification pass for the starter references
 
 ## What You Don't Get
 
@@ -119,7 +120,7 @@ That gives you continuity, visibility, a timing loop, and a perimeter. Add the r
 3. **Read the playbook in order** — each chapter builds on the previous ones
 4. **Customize templates** — the files in `templates/` are starting points; make them yours
 5. **Use `reference/` for starter implementations** — task CLI, memory extractor/search, hook skeletons
-6. **Run `docs/validation.md`** — prove the loop works
+6. **Run `docs/validation.md` or `reference/scripts/verify`** — prove the loop works
 7. **Iterate** — your agent's infrastructure will evolve. That's the point.
 
 ## Philosophy

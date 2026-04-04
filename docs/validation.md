@@ -18,12 +18,16 @@ Expected:
 
 ```bash
 WORKSPACE_ROOT=$(pwd) reference/scripts/task start "Validation task" "Smoke test" other
+WORKSPACE_ROOT=$(pwd) reference/scripts/task start "Validation task" "Smoke test" other
 WORKSPACE_ROOT=$(pwd) reference/scripts/task list
+WORKSPACE_ROOT=$(pwd) reference/scripts/task sprint
 ```
 
 Expected:
 - a task id is printed
+- repeating the same `task start` does not crash
 - the task appears as `in-progress`
+- `task sprint` prints grouped output
 
 ## 3. Memory extraction works
 
@@ -35,11 +39,13 @@ echo '# 2026-04-04
 - Decided to keep heartbeat checks lean.
 - Fixed a startup path mismatch in setup.sh.' > memory/2026-04-04.md
 WORKSPACE_ROOT=$(pwd) reference/scripts/mem-extract
+WORKSPACE_ROOT=$(pwd) reference/scripts/mem-extract
 WORKSPACE_ROOT=$(pwd) reference/scripts/mem-search "heartbeat"
 ```
 
 Expected:
 - extractor completes
+- a second run does not duplicate observations
 - search returns the stored observation
 
 ## 4. Hook skeleton behaves as expected
@@ -86,6 +92,14 @@ Spawn one sub-agent for a bounded task, then verify output manually:
 
 Expected:
 - no "trust the agent blindly" behavior
+
+## Optional: Run the bundled smoke test
+
+```bash
+reference/scripts/verify
+```
+
+This checks script syntax, task flow, task idempotency, sprint/delete contract, and duplicate-safe memory extraction.
 
 ## Exit Criteria
 

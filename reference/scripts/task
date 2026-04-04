@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-import hashlib
+"""Educational scaffold, not production hardened.
+
+Tiny SQLite-backed task CLI for the playbook reference implementation.
+Default workspace root: ~/clawd (override with WORKSPACE_ROOT=/path).
+"""
+
+import os
 import sqlite3
 import sys
+import uuid
 from pathlib import Path
 
-WORKSPACE_ROOT = Path((__import__('os').environ.get('WORKSPACE_ROOT') or (Path.home() / 'clawd')))
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "clawd")))
 DB_PATH = WORKSPACE_ROOT / "data" / "agent.db"
 
 SCHEMA = """
@@ -35,14 +42,32 @@ def conn():
     return c
 
 
-def make_id(*parts):
-    h = hashlib.sha256("|".join(parts).encode()).hexdigest()
-    return h[:8]
+def new_id() -> str:
+    return uuid.uuid4().hex[:8]
 
 
 def usage():
-    print("usage: task <start|done|plan|update|set-input|list|show|search> ...", file=sys.stderr)
+    print(
+        "usage: task <start|done|plan|update|set-input|list|show|search|delete|sprint> ...",
+        file=sys.stderr,
+    )
     sys.exit(1)
+
+
+def find_matching_in_progress(c, title, input_text, category, priority):
+    return c.execute(
+        """
+        SELECT id FROM tasks
+        WHERE status='in-progress'
+          AND title=?
+          AND COALESCE(input,'')=COALESCE(?, '')
+          AND category=?
+          AND priority=?
+        ORDER BY updated_at DESC
+        LIMIT 1
+        """,
+        (title, input_text, category, priority),
+    ).fetchone()
 
 
 def cmd_start(args):
@@ -50,8 +75,16 @@ def cmd_start(args):
     input_text = args[1] if len(args) > 1 else None
     category = args[2] if len(args) > 2 else "other"
     priority = args[3] if len(args) > 3 else "medium"
-    task_id = make_id(title, input_text or "", category, priority)
     with conn() as c:
+        existing = find_matching_in_progress(c, title, input_text, category, priority)
+        if existing:
+            c.execute(
+                "UPDATE tasks SET updated_at=datetime('now') WHERE id=?",
+                (existing["id"],),
+            )
+            print(existing["id"])
+            return
+        task_id = new_id()
         c.execute(
             "INSERT INTO tasks (id, title, input, status, category, priority) VALUES (?, ?, ?, 'in-progress', ?, ?)",
             (task_id, title, input_text, category, priority),
@@ -76,7 +109,7 @@ def cmd_done(args):
             )
             print(row["id"])
         else:
-            task_id = make_id(title, input_text or "", output or "", category)
+            task_id = new_id()
             c.execute(
                 "INSERT INTO tasks (id, title, input, output, status, category) VALUES (?, ?, ?, ?, 'done', ?)",
                 (task_id, title, input_text, output, category),
@@ -88,8 +121,16 @@ def cmd_plan(args):
     title = args[0]
     input_text = args[1] if len(args) > 1 else None
     category = args[2] if len(args) > 2 else "other"
-    task_id = make_id(title, input_text or "", category, "planned")
     with conn() as c:
+        row = c.execute(
+            "SELECT id FROM tasks WHERE status='planned' AND title=? AND COALESCE(input,'')=COALESCE(?, '') AND category=? ORDER BY updated_at DESC LIMIT 1",
+            (title, input_text, category),
+        ).fetchone()
+        if row:
+            c.execute("UPDATE tasks SET updated_at=datetime('now') WHERE id=?", (row["id"],))
+            print(row["id"])
+            return
+        task_id = new_id()
         c.execute(
             "INSERT INTO tasks (id, title, input, status, category) VALUES (?, ?, ?, 'planned', ?)",
             (task_id, title, input_text, category),
@@ -102,16 +143,25 @@ def cmd_update(args):
     desc = args[2] if len(args) > 2 else None
     with conn() as c:
         if status == "done" and desc is not None:
-            c.execute("UPDATE tasks SET status=?, output=?, updated_at=datetime('now') WHERE id=?", (status, desc, task_id))
+            c.execute(
+                "UPDATE tasks SET status=?, output=?, updated_at=datetime('now') WHERE id=?",
+                (status, desc, task_id),
+            )
         else:
-            c.execute("UPDATE tasks SET status=?, updated_at=datetime('now') WHERE id=?", (status, task_id))
+            c.execute(
+                "UPDATE tasks SET status=?, updated_at=datetime('now') WHERE id=?",
+                (status, task_id),
+            )
     print(task_id)
 
 
 def cmd_set_input(args):
     task_id, input_text = args[0], args[1]
     with conn() as c:
-        c.execute("UPDATE tasks SET input=?, updated_at=datetime('now') WHERE id=?", (input_text, task_id))
+        c.execute(
+            "UPDATE tasks SET input=?, updated_at=datetime('now') WHERE id=?",
+            (input_text, task_id),
+        )
     print(task_id)
 
 
@@ -121,9 +171,11 @@ def cmd_list(args):
     i = 0
     while i < len(args):
         if args[i] == "--limit":
-            limit = int(args[i+1]); i += 2
+            limit = int(args[i + 1])
+            i += 2
         else:
-            status = args[i]; i += 1
+            status = args[i]
+            i += 1
     q = "SELECT id, status, category, title, updated_at FROM tasks"
     params = []
     if status:
@@ -133,7 +185,9 @@ def cmd_list(args):
     params.append(limit)
     with conn() as c:
         for row in c.execute(q, params):
-            print(f"{row['id']}\t{row['status']}\t{row['category']}\t{row['title']}\t{row['updated_at']}")
+            print(
+                f"{row['id']}\t{row['status']}\t{row['category']}\t{row['title']}\t{row['updated_at']}"
+            )
 
 
 def cmd_show(args):
@@ -148,8 +202,48 @@ def cmd_show(args):
 def cmd_search(args):
     q = "%" + args[0] + "%"
     with conn() as c:
-        for row in c.execute("SELECT id, status, title FROM tasks WHERE title LIKE ? OR input LIKE ? OR output LIKE ? ORDER BY updated_at DESC LIMIT 20", (q, q, q)):
+        for row in c.execute(
+            "SELECT id, status, title FROM tasks WHERE title LIKE ? OR input LIKE ? OR output LIKE ? ORDER BY updated_at DESC LIMIT 20",
+            (q, q, q),
+        ):
             print(f"{row['id']}\t{row['status']}\t{row['title']}")
+
+
+def cmd_delete(args):
+    task_id = args[0]
+    with conn() as c:
+        c.execute("DELETE FROM tasks WHERE id=?", (task_id,))
+    print(task_id)
+
+
+def cmd_sprint(args):
+    status = None
+    i = 0
+    while i < len(args):
+        if args[i] == "--status":
+            status = args[i + 1]
+            i += 2
+        else:
+            status = args[i]
+            i += 1
+    q = "SELECT id, status, category, title FROM tasks"
+    params = []
+    if status:
+        q += " WHERE status=?"
+        params.append(status)
+    q += " ORDER BY category ASC, updated_at DESC"
+
+    with conn() as c:
+        rows = list(c.execute(q, params))
+    if not rows:
+        return
+
+    current = None
+    for row in rows:
+        if row["category"] != current:
+            current = row["category"]
+            print(f"=== {current} ===")
+        print(f"  [{row['status']}] {row['id']}  {row['title']}")
 
 
 COMMANDS = {
@@ -161,6 +255,8 @@ COMMANDS = {
     "list": cmd_list,
     "show": cmd_show,
     "search": cmd_search,
+    "delete": cmd_delete,
+    "sprint": cmd_sprint,
 }
 
 

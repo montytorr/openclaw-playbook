@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""Educational scaffold, not production hardened.
+
+Tiny memory extractor: ingests bullet points from daily notes into SQLite.
+Default workspace root: ~/clawd (override with WORKSPACE_ROOT=/path).
+"""
+
 import os
 import re
 import sqlite3
@@ -17,8 +23,10 @@ CREATE TABLE IF NOT EXISTS observations (
     source_file TEXT NOT NULL,
     source_date TEXT NOT NULL,
     extracted_at TEXT NOT NULL DEFAULT (datetime('now')),
-    tags TEXT
+    tags TEXT,
+    UNIQUE(source_file, source_date, content)
 );
+CREATE INDEX IF NOT EXISTS idx_obs_source ON observations(source_file, source_date);
 CREATE VIRTUAL TABLE IF NOT EXISTS observations_fts USING fts5(content, content='observations', content_rowid='id');
 CREATE TRIGGER IF NOT EXISTS observations_ai AFTER INSERT ON observations BEGIN
   INSERT INTO observations_fts(rowid, content) VALUES (new.id, new.content);
@@ -28,7 +36,7 @@ END;
 CATEGORY_RULES = {
     "decision": ["decided", "chose", "decision"],
     "discovery": ["learned", "discovered", "found that"],
-    "change": ["updated", "changed", "added", "removed", "migrated"],
+    "change": ["updated", "changed", "added", "removed", "migrated", "fixed"],
     "error": ["error", "failed", "broke", "incident", "bug"],
     "person": ["met with", "talked to", "person"],
 }
@@ -55,20 +63,30 @@ def main():
     DB.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB)
     conn.executescript(SCHEMA)
-    for file in sorted(MEMORY_DIR.glob('20*.md')):
-      text = file.read_text(errors='ignore')
-      bullets = re.findall(r'^-\s+(.*)$', text, flags=re.M)
-      for bullet in bullets:
-          bullet = bullet.strip()
-          if not bullet:
-              continue
-          conn.execute(
-              "INSERT INTO observations (content, category, importance, source_file, source_date) VALUES (?, ?, ?, ?, ?)",
-              (bullet, classify(bullet), importance(bullet), str(file.relative_to(ROOT)), file.stem),
-          )
+    inserted = 0
+    skipped = 0
+    for file in sorted(MEMORY_DIR.glob("20*.md")):
+        text = file.read_text(errors="ignore")
+        bullets = re.findall(r"^-\s+(.*)$", text, flags=re.M)
+        for bullet in bullets:
+            bullet = bullet.strip()
+            if not bullet:
+                continue
+            cur = conn.execute(
+                """
+                INSERT OR IGNORE INTO observations
+                (content, category, importance, source_file, source_date)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (bullet, classify(bullet), importance(bullet), str(file.relative_to(ROOT)), file.stem),
+            )
+            if cur.rowcount:
+                inserted += 1
+            else:
+                skipped += 1
     conn.commit()
-    print('ok')
+    print(f"ok inserted={inserted} skipped={skipped}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
