@@ -22,7 +22,7 @@ Experienced developers who:
 
 ## What You Don't Get
 
-- **Actual implementation code** — we describe patterns and interfaces; you build your own. This is intentional: security through obscurity adds a real layer, and your implementations should match your threat model.
+- **Actual implementation code** — we describe patterns and interfaces; you build your own. This is intentional: the playbook focuses on transferable patterns, while your concrete implementations should match your threat model and operating environment.
 - **API keys or secrets** — all credentials use `<YOUR_KEY_HERE>` placeholders
 - **Our specific configurations** — the playbook is generic. Adapt everything to your setup.
 
@@ -42,7 +42,7 @@ Treat everything here as **infrastructure guidance for experienced operators**, 
 
 ```bash
 # Clone this repo
-git clone https://github.com/your-org/openclaw-playbook.git
+git clone https://github.com/montytorr/openclaw-playbook.git
 cd openclaw-playbook
 
 # Run the setup script
@@ -91,6 +91,17 @@ openclaw-playbook/
     ├── memory-conventions.md ← Memory file formats & conventions
     └── project-template.md ← Project file format specification
 ```
+
+## Lean Starting Path
+
+If you don't want the full stack on day one, start with these four things:
+
+1. daily notes in `memory/YYYY-MM-DD.md`
+2. a minimal `task` tracker
+3. a small `HEARTBEAT.md`
+4. one security hook guarding dangerous tool calls
+
+That gives you continuity, visibility, a timing loop, and a perimeter. Add the rest after that works.
 
 ## How to Use This
 

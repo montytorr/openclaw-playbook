@@ -33,16 +33,17 @@ OpenClaw hooks are event-driven handlers registered in `openclaw.json`. Each hoo
 }
 ```
 
-### Why We Don't Share Implementations
+### Why We Don't Share Full Implementations
 
-You'll notice this playbook describes patterns and interfaces, not code. This is deliberate:
+You'll notice this playbook describes patterns and interfaces, not production code. This is deliberate, but the reason is not "hide everything and hope." The real reasons are:
 
-1. **Security through obscurity adds a layer.** If attackers know exactly how your credential scanner works, they can craft payloads that bypass it. Generic patterns are educational; specific implementations are attack surface documentation.
+1. **Your threat model isn't ours.** Our `the-wall` hook patterns are tuned to the services we use. Yours should match your own environment.
 
-2. **Your threat model isn't ours.** Our `the-wall` hook has 21 regex patterns tuned to the specific services we use. Yours should match YOUR services.
+2. **Boundary design matters more than exact regexes.** Isolation, audit logs, approvals, and layered controls do more for security than any single secret-scanning pattern.
 
 3. **You'll understand it better if you build it.** Copying code creates false confidence. Building from a pattern description forces you to think through edge cases.
 
+Where possible, the playbook should show enough structure that you can build a reference version without guessing.
 ## Security Hooks
 
 ### `the-wall` — Before Tool Call Gate

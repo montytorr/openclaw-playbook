@@ -56,18 +56,24 @@ templates=(
   "HEARTBEAT.md"
   "TOOLS.md"
   "SECURITY.md"
+  "openclaw.example.json"
 )
 
 for tmpl in "${templates[@]}"; do
-  if [ ! -f "$WORKSPACE/$tmpl" ]; then
+  target="$WORKSPACE/$tmpl"
+  if [ "$tmpl" = "openclaw.example.json" ]; then
+    target="$WORKSPACE/config/$tmpl"
+  fi
+
+  if [ ! -f "$target" ]; then
     if [ -f "$TEMPLATES_DIR/$tmpl" ]; then
-      cp "$TEMPLATES_DIR/$tmpl" "$WORKSPACE/$tmpl"
-      echo "  📄 Copied $tmpl"
+      cp "$TEMPLATES_DIR/$tmpl" "$target"
+      echo "  📄 Copied ${tmpl} → ${target#$WORKSPACE/}"
     else
       echo "  ⚠️  Template $tmpl not found in $TEMPLATES_DIR"
     fi
   else
-    echo "  ⏭️  $tmpl already exists (not overwriting)"
+    echo "  ⏭️  ${target#$WORKSPACE/} already exists (not overwriting)"
   fi
 done
 
@@ -139,11 +145,12 @@ echo "  2. Edit $WORKSPACE/SOUL.md — define voice, boundaries, and behavioral 
 echo "  3. Edit $WORKSPACE/USER.md — tell your agent about yourself"
 echo "  4. Edit $WORKSPACE/AGENTS.md — customize the instruction set"
 echo "  5. Edit $WORKSPACE/SECURITY.md — set your security rules"
-echo "  6. Read the playbook: playbook/01-foundations.md through 15-context-management.md"
+echo "  6. Read the playbook: playbook/01-foundations.md through 16-infrastructure.md"
 echo "  7. Build your scripts in $WORKSPACE/scripts/"
 echo "  8. Build your hooks in $WORKSPACE/hooks/"
 echo ""
 echo "📖 Start with: playbook/01-foundations.md"
 echo ""
 echo "Remember: this setup does NOT touch openclaw.json or any running config."
+echo "Use $WORKSPACE/config/openclaw.example.json as your starting point for config."
 echo "Configure OpenClaw separately to point at this workspace."
