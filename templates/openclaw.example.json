@@ -1,9 +1,38 @@
 {
+  "auth": {
+    "profiles": {
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      }
+    },
+    "order": {
+      "openai-codex": [
+        "openai-codex:default"
+      ]
+    }
+  },
   "agents": {
     "defaults": {
-      "model": "anthropic/claude-sonnet-4-20250514",
-      "fallbackModel": "anthropic/claude-haiku-3-20250722",
+      "model": {
+        "primary": "openai-codex/gpt-5.4",
+        "fallbacks": [
+          "openai-codex/gpt-5.3-codex-spark"
+        ]
+      },
+      "models": {
+        "openai-codex/gpt-5.4": {
+          "alias": "codex"
+        },
+        "openai-codex/gpt-5.3-codex-spark": {
+          "alias": "spark"
+        }
+      },
       "workspace": "/root/clawd",
+      "thinkingDefault": "medium",
+      "subagents": {
+        "thinking": "off"
+      },
       "bootstrapFiles": [
         "AGENTS.md",
         "SOUL.md",
@@ -93,7 +122,8 @@
         "payload": {
           "kind": "agentTurn",
           "message": "Generate a morning briefing: check calendar, scan email for urgent items, summarize any overnight activity.",
-          "model": "anthropic/claude-sonnet-4-6",
+          "model": "openai-codex/gpt-5.4",
+          "thinking": "medium",
           "timeoutSeconds": 600
         },
         "delivery": {
@@ -114,7 +144,8 @@
         "payload": {
           "kind": "agentTurn",
           "message": "Run system health check. Only report if something needs attention.",
-          "model": "<CHEAPER_MODEL>",
+          "model": "openai-codex/gpt-5.3-codex-spark",
+          "thinking": "low",
           "timeoutSeconds": 300
         },
         "delivery": {

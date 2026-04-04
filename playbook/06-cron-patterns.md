@@ -99,7 +99,8 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Generate a morning briefing: check calendar for today's events, scan email for anything urgent, check market pre-open for any positions that need attention. Deliver a concise summary.",
-    "model": "anthropic/claude-sonnet-4-6",
+    "model": "openai-codex/gpt-5.4",
+    "thinking": "medium",
     "timeoutSeconds": 600
   },
   "delivery": {
@@ -124,7 +125,8 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Run system health check: Docker containers, disk space, cron job status, recent error logs. Only report if something needs attention.",
-    "model": "<CHEAPER_MODEL>",
+    "model": "openai-codex/gpt-5.3-codex-spark",
+    "thinking": "low",
     "timeoutSeconds": 300
   },
   "delivery": {
@@ -148,6 +150,8 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Run integrity-check. If any files have unexpected changes, report immediately. Otherwise, stay silent.",
+    "model": "openai-codex/gpt-5.3-codex-spark",
+    "thinking": "disabled",
     "timeoutSeconds": 300
   },
   "delivery": {
@@ -243,11 +247,32 @@ Don't have a cron job AND a heartbeat checking the same thing. Pick one mechanis
 
 | Strategy | Savings |
 |----------|---------|
-| Use cheaper models for routine crons | 50-80% per job |
+| Use `spark` for routine crons | 50-80% per job |
+| Reserve `gpt-5.4` for analysis/review jobs | Higher quality where it matters |
+| Set `thinking: "low"` for reactor/maintenance jobs | Less reasoning burn |
+| Set `thinking: "disabled"` for mechanical loops | Avoid wasted thought tokens |
 | Batch checks into heartbeats | Fewer total sessions |
 | "Only report if something needs attention" | Shorter outputs |
 | Increase heartbeat interval during quiet hours | Fewer overnight checks |
 | Use `once: true` for reminders | No recurring cost |
+
+## Codex-Only Production Pattern
+
+If you're running OpenClaw on Codex after provider migration, a sane default split looks like this:
+
+- **Main agent:** `openai-codex/gpt-5.4` + `thinking=medium`
+- **Sub-agents by default:** inherited model, but `thinking=off`
+- **High-frequency cron checks / reactors:** `openai-codex/gpt-5.3-codex-spark` + `thinking=low`
+- **Mechanical watchdogs / stop-loss loops:** `spark` + `thinking=disabled`
+- **Nightly/weekly analysis jobs:** `gpt-5.4` + `thinking=medium`
+
+Escalate reasoning only when the work is actually ambiguous, multi-step, or synthesis-heavy.
+
+A good trigger list for increasing thinking:
+- the job keeps failing for non-mechanical reasons
+- the output requires synthesis, prioritization, or judgment
+- the task is comparing multiple signals, not just checking one condition
+- shallow runs produce brittle or contradictory output
 
 ## What to Build
 

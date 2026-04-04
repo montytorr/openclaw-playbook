@@ -23,8 +23,19 @@ The main configuration file lives at `~/.openclaw/openclaw.json` (or wherever yo
 {
   "agents": {
     "defaults": {
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": {
+        "primary": "openai-codex/gpt-5.4",
+        "fallbacks": ["openai-codex/gpt-5.3-codex-spark"]
+      },
+      "models": {
+        "openai-codex/gpt-5.4": { "alias": "codex" },
+        "openai-codex/gpt-5.3-codex-spark": { "alias": "spark" }
+      },
       "workspace": "/root/clawd",
+      "thinkingDefault": "medium",
+      "subagents": {
+        "thinking": "off"
+      },
       "bootstrapFiles": [
         "AGENTS.md",
         "SOUL.md",
@@ -38,8 +49,7 @@ The main configuration file lives at `~/.openclaw/openclaw.json` (or wherever yo
     "list": [
       {
         "id": "main",
-        "name": "Your Agent",
-        "model": "anthropic/claude-sonnet-4-20250514"
+        "name": "Your Agent"
       }
     ]
   }
@@ -53,12 +63,39 @@ Key decisions:
 
 ### Model Configuration
 
+As of April 2026, one practical production pattern is **Codex-only routing**.
+
+Why? Because Anthropic Claude OAuth no longer reliably works with OpenClaw in the way many early setups depended on. If your system was built around Claude OAuth, assume that path may break and document a provider migration strategy.
+
+A solid Codex setup looks like this:
+
 ```json
 {
+  "auth": {
+    "profiles": {
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      }
+    },
+    "order": {
+      "openai-codex": ["openai-codex:default"]
+    }
+  },
   "agents": {
     "defaults": {
-      "model": "anthropic/claude-sonnet-4-20250514",
-      "fallbackModel": "anthropic/claude-haiku-3-20250722",
+      "model": {
+        "primary": "openai-codex/gpt-5.4",
+        "fallbacks": ["openai-codex/gpt-5.3-codex-spark"]
+      },
+      "models": {
+        "openai-codex/gpt-5.4": { "alias": "codex" },
+        "openai-codex/gpt-5.3-codex-spark": { "alias": "spark" }
+      },
+      "thinkingDefault": "medium",
+      "subagents": {
+        "thinking": "off"
+      },
       "imageGenerationModel": {
         "primary": "openai/gpt-image-1"
       }
@@ -68,10 +105,41 @@ Key decisions:
 ```
 
 **Model strategy:**
-- Primary model for main conversations (quality matters)
-- Cheaper fallback for high-volume operations (cron jobs, automated checks)
-- Per-session overrides for specific cron jobs that need different capabilities
-- Image generation model (separate from chat model)
+- `gpt-5.4` (`codex`) for the main agent and heavier reasoning work
+- `gpt-5.3-codex-spark` (`spark`) as the fast/cheap fallback
+- main session default thinking: `medium`
+- sub-agent default thinking: `off` (escalate only when needed)
+- per-cron overrides based on workload, not habit
+- image generation model remains separate from chat model
+
+### A Practical Thinking Policy
+
+This ended up being the useful split in production:
+
+| Workload | Model | Thinking |
+|---|---|---|
+| Main conversations | `gpt-5.4` | `medium` |
+| High-frequency cron/reactor checks | `spark` | `low` |
+| Mechanical watchdog loops | `spark` | `disabled` / `off` |
+| Nightly reviews, retros, strategy | `gpt-5.4` | `medium` |
+| Sub-agents by default | inherited / override | `off` |
+
+The principle is simple: **don't spend reasoning where there is no reasoning to do.**
+
+### Provider Migration Checklist
+
+If you're moving from one provider stack to another, do all of it or you'll get weird half-migrated behavior:
+
+1. update agent defaults (`primary`, `fallbacks`, aliases)
+2. remove the old auth profile and provider ordering
+3. update cron payload models
+4. normalize cron `thinking` settings job-by-job
+5. check sub-agent defaults (`subagents.thinking`)
+6. verify only the intended live agent remains active
+7. clear stale cron `sessionKey` pinning if historical sessions keep surfacing old provider metadata
+8. verify with config inspection / grep that the old provider no longer appears in live config
+
+The annoying truth: changing only the main model is not enough. Crons and old pinned sessions will happily keep dragging dead provider assumptions around.
 
 ### Channel Configuration
 
@@ -147,7 +215,8 @@ Hook paths are relative to the workspace. Register hooks in priority order — s
         "payload": {
           "kind": "agentTurn",
           "message": "Generate morning briefing...",
-          "model": "anthropic/claude-sonnet-4-6",
+          "model": "openai-codex/gpt-5.4",
+          "thinking": "medium",
           "timeoutSeconds": 600
         },
         "delivery": {
@@ -173,6 +242,13 @@ Hook paths are relative to the workspace. Register hooks in priority order — s
   }
 }
 ```
+
+If you migrate providers, do the cleanup properly:
+- remove the old auth profile and provider order
+- update cron payload models, not just agent defaults
+- normalize thinking levels job-by-job
+- clear stale `sessionKey` pinning on cron jobs if old sessions keep surfacing legacy model metadata
+- verify with greps or config inspection that no old provider strings remain in active config
 
 Cross-reference: see Chapter 6 for cron patterns and the heartbeat vs cron decision tree.
 
@@ -221,9 +297,12 @@ Plugins extend OpenClaw's capabilities. The `device-pair` plugin enables compani
 Create a `.env` file in your workspace root (git-ignored):
 
 ```bash
-# LLM Provider Keys
-ANTHROPIC_API_KEY=<YOUR_KEY_HERE>
+# LLM / auth
+# If using OpenAI APIs directly for media/image/etc.
 OPENAI_API_KEY=<YOUR_KEY_HERE>
+
+# Note: Codex chat auth may be OAuth-based rather than raw API-key based,
+# depending on your OpenClaw provider setup.
 
 # Channel Tokens
 DISCORD_BOT_TOKEN=<YOUR_KEY_HERE>
@@ -258,10 +337,11 @@ OPENCLAW_GATEWAY_TOKEN=<YOUR_KEY_HERE>
 
 For a fresh setup, start with:
 1. One agent (`main`)
-2. One channel (Discord or Telegram)
-3. Two hooks (`the-wall` + `agent-firewall`)
-4. One cron job (heartbeat)
-5. Basic model configuration
+2. One auth profile and one provider path you trust
+3. One channel (Discord or Telegram)
+4. Two hooks (`the-wall` + `agent-firewall`)
+5. One cron job (heartbeat)
+6. Basic model configuration
 
 Add complexity incrementally. A config with 17 hooks and 20 cron jobs didn't happen on day one — it grew over months.
 
@@ -279,6 +359,8 @@ openclaw gateway logs
 ```
 
 Always validate JSON syntax before restarting. A syntax error in `openclaw.json` can prevent the gateway from starting.
+
+For provider migrations, also verify semantics — not just syntax. A config can be perfectly valid JSON and still be operationally broken because some cron payloads or auth order still point at the dead provider.
 
 ### Backup Strategy
 
