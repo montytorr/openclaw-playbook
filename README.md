@@ -22,6 +22,7 @@ Experienced developers who:
 - **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
 - **Validation docs** — smoke tests for proving the loop actually works
 - **Smoke-test script** — a bundled verification pass for the starter references
+- **GitHub Actions CI** — a minimal verify workflow for push + pull_request
 
 ## What You Don't Get
 
@@ -52,6 +53,9 @@ cd openclaw-playbook
 chmod +x setup.sh
 ./setup.sh
 
+# Or bootstrap headlessly / in CI
+./setup.sh --workspace /tmp/clawd --non-interactive --skip-commit
+
 # Start reading
 # The playbook is ordered — read chapters 01 through 16 sequentially
 ```
@@ -62,7 +66,7 @@ chmod +x setup.sh
 openclaw-playbook/
 ├── README.md              ← You are here
 ├── LICENSE                ← MIT
-├── setup.sh               ← Interactive workspace scaffolding
+├── setup.sh               ← Workspace scaffolding (interactive by default, automation-friendly flags available)
 ├── playbook/              ← The main documentation (read in order)
 │   ├── 01-foundations.md  ← Workspace structure & identity files
 │   ├── 02-memory-system.md ← Daily notes, MEMORY.md, claude-mem
@@ -116,6 +120,9 @@ That gives you continuity, visibility, a timing loop, and a perimeter. Add the r
 ## How to Use This
 
 1. **Run `setup.sh`** — creates your workspace directory structure and copies templates
+   - For automation/headless bootstrap, use `--non-interactive`
+   - Use `--workspace PATH` to avoid the prompt entirely
+   - Use `--skip-commit` if you want git initialized without creating the first commit yet
 2. **Read `docs/one-pager.md`** — get the operating loop in your head fast
 3. **Read the playbook in order** — each chapter builds on the previous ones
 4. **Customize templates** — the files in `templates/` are starting points; make them yours
@@ -133,6 +140,19 @@ This playbook is opinionated. The core beliefs:
 - **Security is non-negotiable.** The moment you give an agent access to your email, git, and infrastructure, you need defense in depth. Not paranoia — engineering.
 - **Build your own tools.** Copying someone else's hooks and scripts gives you their security assumptions without their context. Understand the pattern, then implement it yourself.
 - **Private-first beats public-by-default.** If an admin surface can live behind Tailscale or another private network, keep it there.
+
+## Verification
+
+Local smoke test:
+
+```bash
+reference/scripts/verify
+```
+
+CI runs the same checks on every push and pull request via `.github/workflows/verify.yml`:
+- `bash -n setup.sh`
+- `python3 -m py_compile` for the reference Python scripts
+- `reference/scripts/verify`
 
 ## Contributing
 

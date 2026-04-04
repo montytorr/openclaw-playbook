@@ -14,6 +14,10 @@ from pathlib import Path
 WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "clawd")))
 DB_PATH = WORKSPACE_ROOT / "data" / "agent.db"
 
+EXIT_USAGE = 1
+EXIT_NOT_FOUND = 2
+VALID_STATUSES = {"in-progress", "done", "planned"}
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS tasks (
     id TEXT PRIMARY KEY,
@@ -51,7 +55,29 @@ def usage():
         "usage: task <start|done|plan|update|set-input|list|show|search|delete|sprint> ...",
         file=sys.stderr,
     )
-    sys.exit(1)
+    sys.exit(EXIT_USAGE)
+
+
+def require_args(args, minimum):
+    if len(args) < minimum:
+        usage()
+
+
+def fail(message, code=EXIT_USAGE):
+    print(message, file=sys.stderr)
+    raise SystemExit(code)
+
+
+def ensure_valid_status(status):
+    if status not in VALID_STATUSES:
+        fail(f"invalid status: {status}")
+
+
+def find_task_or_fail(c, task_id):
+    row = c.execute("SELECT * FROM tasks WHERE id=?", (task_id,)).fetchone()
+    if not row:
+        fail(f"task not found: {task_id}", EXIT_NOT_FOUND)
+    return row
 
 
 def find_matching_in_progress(c, title, input_text, category, priority):
@@ -71,6 +97,7 @@ def find_matching_in_progress(c, title, input_text, category, priority):
 
 
 def cmd_start(args):
+    require_args(args, 1)
     title = args[0]
     input_text = args[1] if len(args) > 1 else None
     category = args[2] if len(args) > 2 else "other"
@@ -93,6 +120,7 @@ def cmd_start(args):
 
 
 def cmd_done(args):
+    require_args(args, 1)
     title = args[0]
     input_text = args[1] if len(args) > 1 else None
     output = args[2] if len(args) > 2 else None
@@ -118,6 +146,7 @@ def cmd_done(args):
 
 
 def cmd_plan(args):
+    require_args(args, 1)
     title = args[0]
     input_text = args[1] if len(args) > 1 else None
     category = args[2] if len(args) > 2 else "other"
@@ -139,9 +168,12 @@ def cmd_plan(args):
 
 
 def cmd_update(args):
+    require_args(args, 2)
     task_id, status = args[0], args[1]
     desc = args[2] if len(args) > 2 else None
+    ensure_valid_status(status)
     with conn() as c:
+        find_task_or_fail(c, task_id)
         if status == "done" and desc is not None:
             c.execute(
                 "UPDATE tasks SET status=?, output=?, updated_at=datetime('now') WHERE id=?",
@@ -156,8 +188,10 @@ def cmd_update(args):
 
 
 def cmd_set_input(args):
+    require_args(args, 2)
     task_id, input_text = args[0], args[1]
     with conn() as c:
+        find_task_or_fail(c, task_id)
         c.execute(
             "UPDATE tasks SET input=?, updated_at=datetime('now') WHERE id=?",
             (input_text, task_id),
@@ -171,11 +205,15 @@ def cmd_list(args):
     i = 0
     while i < len(args):
         if args[i] == "--limit":
+            if i + 1 >= len(args):
+                usage()
             limit = int(args[i + 1])
             i += 2
         else:
             status = args[i]
             i += 1
+    if status is not None:
+        ensure_valid_status(status)
     q = "SELECT id, status, category, title, updated_at FROM tasks"
     params = []
     if status:
@@ -191,15 +229,15 @@ def cmd_list(args):
 
 
 def cmd_show(args):
+    require_args(args, 1)
     with conn() as c:
-        row = c.execute("SELECT * FROM tasks WHERE id=?", (args[0],)).fetchone()
-        if not row:
-            sys.exit("task not found")
+        row = find_task_or_fail(c, args[0])
         for k in row.keys():
             print(f"{k}: {row[k]}")
 
 
 def cmd_search(args):
+    require_args(args, 1)
     q = "%" + args[0] + "%"
     with conn() as c:
         for row in c.execute(
@@ -210,8 +248,10 @@ def cmd_search(args):
 
 
 def cmd_delete(args):
+    require_args(args, 1)
     task_id = args[0]
     with conn() as c:
+        find_task_or_fail(c, task_id)
         c.execute("DELETE FROM tasks WHERE id=?", (task_id,))
     print(task_id)
 
@@ -221,11 +261,15 @@ def cmd_sprint(args):
     i = 0
     while i < len(args):
         if args[i] == "--status":
+            if i + 1 >= len(args):
+                usage()
             status = args[i + 1]
             i += 2
         else:
             status = args[i]
             i += 1
+    if status is not None:
+        ensure_valid_status(status)
     q = "SELECT id, status, category, title FROM tasks"
     params = []
     if status:
@@ -239,11 +283,23 @@ def cmd_sprint(args):
         return
 
     current = None
+    current_rows = []
     for row in rows:
         if row["category"] != current:
+            if current_rows:
+                print(f"=== {current} ({len(current_rows)} tasks) ===")
+                for item in current_rows:
+                    print(f"  [{item['status']}] {item['id']}  {item['title']}")
+                print()
             current = row["category"]
-            print(f"=== {current} ===")
-        print(f"  [{row['status']}] {row['id']}  {row['title']}")
+            current_rows = [row]
+        else:
+            current_rows.append(row)
+
+    if current_rows:
+        print(f"=== {current} ({len(current_rows)} tasks) ===")
+        for item in current_rows:
+            print(f"  [{item['status']}] {item['id']}  {item['title']}")
 
 
 COMMANDS = {

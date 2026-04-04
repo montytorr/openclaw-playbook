@@ -95,6 +95,7 @@ task update <id> <status> [description]
 - Finds task by ID
 - Updates status and `updated_at`
 - If status is `done` and description provided, sets output
+- If the task ID does not exist, exits with code `2`
 
 ### `task set-input`
 
@@ -108,6 +109,7 @@ task set-input <id> <input>
 - Finds task by ID
 - Updates the input field
 - Updates `updated_at`
+- If the task ID does not exist, exits with code `2`
 
 ### `task list`
 
@@ -143,6 +145,7 @@ task delete <id>
 **Behavior:**
 - Permanently removes the task from the database
 - Prints confirmation
+- If the task ID does not exist, exits with code `2`
 
 ### `task search`
 
@@ -165,17 +168,21 @@ Show full details of a specific task.
 task show <id>
 ```
 
+**Behavior:**
+- Prints the full stored task record
+- If the task ID does not exist, exits with code `2`
+
 **Output:**
 ```
-Task: abc12345
-Title: Fix dashboard bug
-Status: in-progress
-Category: dashboard
-Priority: high
-Input: Tab navigation breaks on page reload
-Output: (none)
-Created: 2026-04-03 10:15:00
-Updated: 2026-04-03 10:15:00
+id: abc12345
+title: Fix dashboard bug
+input: Tab navigation breaks on page reload
+output: None
+status: in-progress
+category: dashboard
+priority: high
+created_at: 2026-04-03 10:15:00
+updated_at: 2026-04-03 10:15:00
 ```
 
 ### `task sprint`
@@ -270,7 +277,7 @@ The CLI should accept any string as a category. Validation is optional.
 |------|---------|
 | 0 | Success |
 | 1 | General error (invalid arguments, database error) |
-| 2 | Task not found |
+| 2 | Task not found (`show`, `update`, `set-input`, `delete`) |
 
 ## Integration Points
 

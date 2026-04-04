@@ -21,6 +21,8 @@ WORKSPACE_ROOT=$(pwd) reference/scripts/task start "Validation task" "Smoke test
 WORKSPACE_ROOT=$(pwd) reference/scripts/task start "Validation task" "Smoke test" other
 WORKSPACE_ROOT=$(pwd) reference/scripts/task list
 WORKSPACE_ROOT=$(pwd) reference/scripts/task sprint
+WORKSPACE_ROOT=$(pwd) reference/scripts/task show doesnotexist || echo "show exited $? (expected 2)"
+WORKSPACE_ROOT=$(pwd) reference/scripts/task delete doesnotexist || echo "delete exited $? (expected 2)"
 ```
 
 Expected:
@@ -28,6 +30,7 @@ Expected:
 - repeating the same `task start` does not crash
 - the task appears as `in-progress`
 - `task sprint` prints grouped output
+- not-found mutations/details return exit code `2`
 
 ## 3. Memory extraction works
 
@@ -92,6 +95,15 @@ Spawn one sub-agent for a bounded task, then verify output manually:
 
 Expected:
 - no "trust the agent blindly" behavior
+
+## CI
+
+GitHub Actions workflow: `.github/workflows/verify.yml`
+
+It runs on `push` and `pull_request` and checks:
+- `bash -n setup.sh`
+- `python3 -m py_compile` on the reference Python scripts
+- `reference/scripts/verify`
 
 ## Optional: Run the bundled smoke test
 

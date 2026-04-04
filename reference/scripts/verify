@@ -24,30 +24,49 @@ def capture(cmd, cwd=None, env=None):
     return subprocess.check_output(cmd, cwd=cwd or REPO, env=env or ENV, text=True)
 
 
+def expect_exit_code(cmd, code, env=None):
+    try:
+        subprocess.run(cmd, cwd=REPO, env=env or ENV, check=True)
+    except subprocess.CalledProcessError as exc:
+        assert exc.returncode == code, f"expected exit {code} from {' '.join(cmd)}, got {exc.returncode}"
+        return
+    raise AssertionError(f"expected exit {code} from {' '.join(cmd)}")
+
+
 def main():
     run(["bash", "-n", "setup.sh"])
     run([sys.executable, "-m", "py_compile", "reference/scripts/task", "reference/scripts/mem-extract", "reference/scripts/mem-search", "reference/scripts/verify"])
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
-        (root / "memory").mkdir()
-        (root / "data").mkdir()
         env = dict(ENV)
         env["WORKSPACE_ROOT"] = str(root)
+
+        run(["bash", "setup.sh", "--workspace", str(root), "--non-interactive", "--skip-commit", "--git-name", "Playbook Bot", "--git-email", "bot@example.com"], env=env)
+        assert (root / "AGENTS.md").exists()
+        assert (root / "config" / "openclaw.example.json").exists()
 
         task_id = capture(["reference/scripts/task", "start", "Validation task", "Smoke test", "other"], env=env).strip()
         task_id_2 = capture(["reference/scripts/task", "start", "Validation task", "Smoke test", "other"], env=env).strip()
         assert task_id == task_id_2, "task start should be idempotent for same in-progress task"
 
+        run(["reference/scripts/task", "set-input", task_id, "Updated smoke test input"], env=env)
         run(["reference/scripts/task", "update", task_id, "done", "Completed validation"], env=env)
         show = capture(["reference/scripts/task", "show", task_id], env=env)
         assert "status: done" in show
+        assert "input: Updated smoke test input" in show
 
         # sprint + delete contract
-        run(["reference/scripts/task", "plan", "Plan task", "Future work", "other"], env=env)
+        plan_id = capture(["reference/scripts/task", "plan", "Plan task", "Future work", "other"], env=env).strip()
         sprint = capture(["reference/scripts/task", "sprint"], env=env)
-        assert "=== other ===" in sprint
+        assert "=== other (1 tasks) ===" in sprint or "=== other (2 tasks) ===" in sprint
         run(["reference/scripts/task", "delete", task_id], env=env)
+
+        expect_exit_code(["reference/scripts/task", "show", task_id], 2, env=env)
+        expect_exit_code(["reference/scripts/task", "delete", task_id], 2, env=env)
+        expect_exit_code(["reference/scripts/task", "update", "deadbeef", "done"], 2, env=env)
+        expect_exit_code(["reference/scripts/task", "set-input", "deadbeef", "Missing task"], 2, env=env)
+        run(["reference/scripts/task", "delete", plan_id], env=env)
 
         note = root / "memory" / "2026-04-04.md"
         note.write_text("# 2026-04-04\n\n## 10:00 — Validation\n- Decided to keep heartbeat checks lean.\n- Fixed a startup path mismatch in setup.sh.\n")

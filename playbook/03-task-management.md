@@ -17,6 +17,8 @@ The dashboard Projects tab should reflect reality. If your agent did work and th
 
 The task management system is a CLI tool backed by SQLite. No HTTP API, no external service — just a script that reads and writes a local database.
 
+In the reference implementation, not-found operations are intentionally explicit: `show`, `update`, `set-input`, and `delete` exit with code `2` when the task ID does not exist.
+
 ### Interface
 
 If you want a tiny starting point instead of building from zero, see `reference/scripts/task` in the repo. It is intentionally small, but it proves the loop is executable.
@@ -44,13 +46,13 @@ task list in-progress      # Currently active tasks
 task list planned          # Future work
 
 # Delete a task
-task delete <id>
+task delete <id>   # exits 2 if the ID does not exist
 
 # Search tasks
 task search "query"
 
 # Show task details
-task show <id>
+task show <id>     # exits 2 if the ID does not exist
 
 # Sprint view (grouped by category)
 task sprint

@@ -12,7 +12,7 @@ By default they assume `~/clawd` as the workspace root. Override with:
 WORKSPACE_ROOT=/path/to/workspace <script>
 ```
 
-- `scripts/task` — tiny SQLite-backed task CLI
+- `scripts/task` — tiny SQLite-backed task CLI (with explicit exit code `2` for not-found on `show`, `update`, `set-input`, and `delete`)
 - `scripts/mem-extract` — tiny memory extractor from daily notes into SQLite
 - `scripts/mem-search` — FTS-backed search over observations
 - `hooks/the-wall.example.ts` — secret scan + destructive-exec gate skeleton
@@ -23,6 +23,8 @@ WORKSPACE_ROOT=/path/to/workspace <script>
 
 These references exist to prove the patterns are executable.
 They are intentionally small, incomplete, and easy to replace.
+
+The repo also includes `.github/workflows/verify.yml`, which runs the bundled reference checks on pushes and pull requests.
 
 Do not confuse:
 - **reference implementation** = educational scaffold

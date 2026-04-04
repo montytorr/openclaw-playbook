@@ -6,17 +6,92 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATES_DIR="$SCRIPT_DIR/templates"
+DEFAULT_WORKSPACE="$HOME/clawd"
+WORKSPACE="$DEFAULT_WORKSPACE"
+NON_INTERACTIVE=0
+SKIP_COMMIT=0
+SKIP_GIT_INIT=0
+GIT_NAME="${GIT_AUTHOR_NAME:-${GIT_COMMITTER_NAME:-}}"
+GIT_EMAIL="${GIT_AUTHOR_EMAIL:-${GIT_COMMITTER_EMAIL:-}}"
 
-echo "🦞 OpenClaw Workspace Setup"
-echo "==========================="
-echo ""
+usage() {
+  cat <<'EOF'
+Usage: ./setup.sh [options]
 
-# Ask for workspace path
-read -rp "Workspace path [~/clawd]: " WORKSPACE
-WORKSPACE="${WORKSPACE:-$HOME/clawd}"
+Options:
+  --workspace PATH       Workspace path (default: ~/clawd)
+  --non-interactive      Do not prompt; fail if required values are missing
+  --skip-commit          Initialize git but skip the initial commit
+  --skip-git-init        Do not initialize a git repository
+  --git-name NAME        Git author name to configure locally for a new repo
+  --git-email EMAIL      Git author email to configure locally for a new repo
+  -h, --help             Show this help text
+
+Notes:
+  - Interactive mode still prompts for the workspace path.
+  - Git identity is only configured for a newly created repo when both name and
+    email are supplied via flags or existing GIT_AUTHOR_*/GIT_COMMITTER_* env.
+  - If a new repo is created without identity, the script skips the initial
+    commit and explains how to finish it manually.
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --workspace)
+      [[ $# -ge 2 ]] || { echo "error: --workspace requires a value" >&2; exit 1; }
+      WORKSPACE="$2"
+      shift 2
+      ;;
+    --non-interactive)
+      NON_INTERACTIVE=1
+      shift
+      ;;
+    --skip-commit)
+      SKIP_COMMIT=1
+      shift
+      ;;
+    --skip-git-init)
+      SKIP_GIT_INIT=1
+      shift
+      ;;
+    --git-name)
+      [[ $# -ge 2 ]] || { echo "error: --git-name requires a value" >&2; exit 1; }
+      GIT_NAME="$2"
+      shift 2
+      ;;
+    --git-email)
+      [[ $# -ge 2 ]] || { echo "error: --git-email requires a value" >&2; exit 1; }
+      GIT_EMAIL="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "error: unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
 WORKSPACE="${WORKSPACE/#\~/$HOME}"
 
-echo ""
+if [[ $NON_INTERACTIVE -eq 0 && "$WORKSPACE" == "$DEFAULT_WORKSPACE" ]]; then
+  echo "🦞 OpenClaw Workspace Setup"
+  echo "==========================="
+  echo ""
+  read -rp "Workspace path [~/clawd]: " WORKSPACE_INPUT
+  WORKSPACE_INPUT="${WORKSPACE_INPUT:-$WORKSPACE}"
+  WORKSPACE="${WORKSPACE_INPUT/#\~/$HOME}"
+else
+  echo "🦞 OpenClaw Workspace Setup"
+  echo "==========================="
+  echo ""
+fi
+
 echo "Setting up workspace at: $WORKSPACE"
 echo ""
 
@@ -126,12 +201,31 @@ fi
 echo ""
 
 # Initialize git repo
-if [ ! -d "$WORKSPACE/.git" ]; then
-  cd "$WORKSPACE"
-  git init -q
-  git add -A
-  git commit -q -m "Initial workspace setup via openclaw-playbook"
-  echo "  🔧 Initialized git repository"
+if [ "$SKIP_GIT_INIT" -eq 1 ]; then
+  echo "  ⏭️  Skipping git initialization (--skip-git-init)"
+elif [ ! -d "$WORKSPACE/.git" ]; then
+  (
+    cd "$WORKSPACE"
+    git init -q
+
+    if [[ -n "$GIT_NAME" && -n "$GIT_EMAIL" ]]; then
+      git config user.name "$GIT_NAME"
+      git config user.email "$GIT_EMAIL"
+      echo "  🔧 Configured local git identity for new repo"
+    fi
+
+    git add -A
+
+    if [ "$SKIP_COMMIT" -eq 1 ]; then
+      echo "  ⏭️  Initialized git repository (initial commit skipped)"
+    elif git config user.name >/dev/null && git config user.email >/dev/null; then
+      git commit -q -m "Initial workspace setup via openclaw-playbook"
+      echo "  🔧 Initialized git repository"
+    else
+      echo "  ⚠️  Initialized git repository, but skipped initial commit because git user.name/user.email are not configured"
+      echo "     Re-run with --git-name/--git-email, set git config, or commit manually later"
+    fi
+  )
 else
   echo "  ⏭️  Git repository already initialized"
 fi
