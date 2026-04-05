@@ -49,6 +49,17 @@ task update <id> done "What changed"
 - Mechanical loops: `spark` + `thinking=disabled`
 - Sub-agents: `thinking=off` unless reasoning is actually needed
 
+## Brownfield First, If Applicable
+
+If you're adopting this into an already-active setup:
+- take a baseline snapshot before changing behavior
+- map existing task/memory/hooks surfaces before replacing anything
+- prefer archive-first cleanup
+- ingest Tier A memory first, not bootstrap noise
+- harden hooks in stages: informational -> warning/logging -> blocking
+
+Read `playbook/00-brownfield-adoption.md` first.
+
 ## Validation Quick Checks
 
 - Can the agent write a daily note?

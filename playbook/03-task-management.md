@@ -2,6 +2,30 @@
 
 Rule Zero: track before you work. This chapter documents the task management system that makes Rule Zero possible.
 
+## Brownfield Adoption: Wrap Before You Replace
+
+If you already have a task API or CLI, do not rebuild it on reflex.
+
+Strong default:
+- **wrap** the existing interface if a thin adapter can give you playbook-compatible `start`, `update`, `list`, `show`, and stable IDs
+- **replace** only when the current interface is so inconsistent that the wrapper becomes fiction
+
+A simple mapping template:
+
+| Existing field | Playbook concept | Migration convention |
+|---|---|---|
+| `category` | category/project | keep as category unless it really identifies a long-lived project |
+| `input` | input | use for request / reason / trigger |
+| `output` | output | use for delivered result / accomplishment |
+| `description` | input/output split | split request vs result during migration where possible |
+| `status=todo/backlog` | `planned` | backlog semantics can remain in UI language |
+| `status=doing/active` | `in-progress` | direct mapping |
+| `status=done/complete` | `done` | direct mapping |
+
+If your legacy system relies on extra states like `blocked` or `cancelled`, keep them in wrapper metadata instead of bloating the core playbook status model too early.
+
+See [Chapter 0](00-brownfield-adoption.md) for the full adapter template and wrapper-vs-replace decision path.
+
 ## Philosophy: Why Rule Zero Exists
 
 We tried everything else first:

@@ -57,7 +57,7 @@ chmod +x setup.sh
 ./setup.sh --workspace /tmp/clawd --non-interactive --skip-commit
 
 # Start reading
-# The playbook is ordered — read chapters 01 through 16 sequentially
+# The playbook is ordered — read chapters 00 through 16 sequentially
 ```
 
 ## Structure
@@ -68,6 +68,7 @@ openclaw-playbook/
 ├── LICENSE                ← MIT
 ├── setup.sh               ← Workspace scaffolding (interactive by default, automation-friendly flags available)
 ├── playbook/              ← The main documentation (read in order)
+│   ├── 00-brownfield-adoption.md ← Adopting the playbook into active environments
 │   ├── 01-foundations.md  ← Workspace structure & identity files
 │   ├── 02-memory-system.md ← Daily notes, MEMORY.md, claude-mem
 │   ├── 03-task-management.md ← SQLite task CLI & Rule Zero
@@ -103,6 +104,7 @@ openclaw-playbook/
 └── schemas/               ← Interface specifications
     ├── task-cli.md        ← Task CLI full interface spec
     ├── memory-conventions.md ← Memory file formats & conventions
+    ├── brownfield-adoption-template.md ← Baseline, mapping, and validation template
     └── project-template.md ← Project file format specification
 ```
 
@@ -124,7 +126,8 @@ That gives you continuity, visibility, a timing loop, and a perimeter. Add the r
    - Use `--workspace PATH` to avoid the prompt entirely
    - Use `--skip-commit` if you want git initialized without creating the first commit yet
 2. **Read `docs/one-pager.md`** — get the operating loop in your head fast
-3. **Read the playbook in order** — each chapter builds on the previous ones
+3. **If you're adopting into an existing environment, start with `playbook/00-brownfield-adoption.md`** — inventory reality before changing anything
+4. **Read the playbook in order** — each chapter builds on the previous ones
 4. **Customize templates** — the files in `templates/` are starting points; make them yours
 5. **Use `reference/` for starter implementations** — task CLI, memory extractor/search, hook skeletons
 6. **Run `docs/validation.md` or `reference/scripts/verify`** — prove the loop works
@@ -137,6 +140,7 @@ This playbook is opinionated. The core beliefs:
 - **Agents need identity, not just instructions.** A SOUL.md that defines personality prevents corporate bot syndrome and makes your agent genuinely useful to interact with.
 - **Memory is infrastructure.** Without a proper memory system, every session starts from zero. The real breakthrough is the hybrid model: markdown for narrative continuity, SQLite for observation storage and retrieval, and `MEMORY.md` as the operator-facing digest.
 - **Track everything.** Rule Zero exists because autonomous agents that don't track their work become black boxes. If it happened, it should be logged.
+- **Brownfield beats fantasy.** Most real adoptions happen in already-active environments. Optimize for reversibility, wrappers, archives, and validation inside a dirty repo — not imaginary clean-room migrations.
 - **Security is non-negotiable.** The moment you give an agent access to your email, git, and infrastructure, you need defense in depth. Not paranoia — engineering.
 - **Build your own tools.** Copying someone else's hooks and scripts gives you their security assumptions without their context. Understand the pattern, then implement it yourself.
 - **Private-first beats public-by-default.** If an admin surface can live behind Tailscale or another private network, keep it there.

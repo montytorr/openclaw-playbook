@@ -2,6 +2,20 @@
 
 Hooks are the nervous system of an autonomous agent. They intercept events — tool calls, messages, sessions — and apply logic before or after the agent acts. This chapter describes the hook architecture and the patterns for each category.
 
+## Brownfield Hardening: Use a Maturity Ladder
+
+In an already-active environment, don't jump straight from "no enforcement" to hard blocking everywhere.
+
+Use a three-stage ladder:
+
+1. **Informational** — classify and log what would have happened
+2. **Warning / logging** — surface suspicious or risky actions without fully breaking trusted flows
+3. **Blocking at `before_tool_call`** — enforce high-confidence rules like credential leak prevention and destructive-command approvals
+
+That's the sane rollout path for brownfield systems. Premature blocking creates false positives, operator distrust, and people bypassing the hook entirely.
+
+See [Chapter 0](00-brownfield-adoption.md) for the full rollout guidance.
+
 ## Why Hooks
 
 Without hooks, your agent operates on trust alone. Trust that it won't leak credentials in a tool call. Trust that it'll track its work. Trust that it'll commit code changes. Trust that external actions are logged.

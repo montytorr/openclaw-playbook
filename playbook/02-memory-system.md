@@ -2,6 +2,26 @@
 
 Your agent wakes up fresh every session. Without a memory system, it's perpetually amnesiac — helpful in the moment, useless over time. This chapter covers the infrastructure that gives your agent continuity.
 
+## Brownfield Migration: Ingest Signal Before Noise
+
+If you already have months of notes, exports, and logs, do **not** ingest everything at once.
+
+Use a simple tiering model:
+
+- **Tier A** — ingest first: project decisions, postmortems, durable operator preferences, recurring infra fixes, environment facts
+- **Tier B** — ingest second: sprint summaries, task completions, issue/PR summaries, meeting notes with actual decisions
+- **Tier C** — ingest last or skip: greetings, bootstrap chatter, empty acknowledgements, repetitive heartbeat noise, generic setup logs
+
+The mistake is obvious in hindsight: indexing low-signal bootstrap noise first pollutes retrieval quality and makes the memory system feel dumb.
+
+Practical brownfield rule:
+- start with Tier A
+- validate search quality
+- add selected Tier B
+- only ingest Tier C if you have a specific reason
+
+If you need the full migration checklist and archive-first cleanup stance, see [Chapter 0](00-brownfield-adoption.md).
+
 ## The Problem
 
 LLM sessions are stateless. Context windows are finite. When a session ends or the context fills up, everything the agent learned, decided, or discovered vanishes. During long sessions, OpenClaw automatically compacts older messages — summarizing them to free context space. Details are lost in the process. The memory system exists to make sure nothing important is permanently gone.
@@ -265,6 +285,12 @@ During heartbeats (every few hours), the agent should periodically:
 This is the agent equivalent of a human reviewing their journal. It takes 30 seconds of processing time and prevents context drift.
 
 ## Retention & Archival
+
+Default to **archive-first**, not deletion-first.
+
+If older notes are not needed in the active working set, move them out of the hot path rather than deleting them. In brownfield migrations this matters even more: old files often contain the only surviving explanation for why a system behaves strangely.
+
+If tracked memory or note files were previously deleted but may still carry useful context, restore them first, review them, then archive if they are obsolete. That preserve-review-archive sequence is safer than guessing from a partial history.
 
 Daily notes accumulate. Over months, you'll have hundreds of files. Strategies:
 
