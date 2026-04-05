@@ -22,6 +22,7 @@ Experienced developers who:
 - **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
 - **Validation docs** — smoke tests for proving the loop actually works
 - **Smoke-test script** — a bundled verification pass for the starter references
+- **Brownfield extras** — adapter scaffolds, migration case study, and verifier for active-workspace adoption
 - **GitHub Actions CI** — a minimal verify workflow for push + pull_request
 
 ## What You Don't Get
@@ -96,9 +97,12 @@ openclaw-playbook/
 │   └── openclaw.example.json ← Configuration skeleton
 ├── reference/             ← Minimal runnable starter artifacts
 │   ├── README.md          ← How to use the references
+│   ├── adapters/          ← Example wrapper-mode integration artifacts
 │   ├── hooks/             ← Hook skeleton examples
 │   └── scripts/           ← Tiny task/memory reference scripts
 ├── docs/                  ← Condensed onboarding & validation
+│   ├── case-studies/
+│   │   └── brownfield-migration-example.md ← Short active-workspace adoption example
 │   ├── one-pager.md       ← Fast-start summary
 │   └── validation.md      ← Smoke tests for the operating loop
 └── schemas/               ← Interface specifications
@@ -130,8 +134,9 @@ That gives you continuity, visibility, a timing loop, and a perimeter. Add the r
 4. **Read the playbook in order** — each chapter builds on the previous ones
 4. **Customize templates** — the files in `templates/` are starting points; make them yours
 5. **Use `reference/` for starter implementations** — task CLI, memory extractor/search, hook skeletons
-6. **Run `docs/validation.md` or `reference/scripts/verify`** — prove the loop works
-7. **Iterate** — your agent's infrastructure will evolve. That's the point.
+6. **Run `docs/validation.md` or `reference/scripts/verify`** — prove the starter loop works
+7. **If you're in a live workspace, also run `reference/scripts/verify-brownfield`** — validate dirty-repo, wrapper, archive, and memory-backfill assumptions
+8. **Iterate** — your agent's infrastructure will evolve. That's the point.
 
 ## Philosophy
 
@@ -147,16 +152,18 @@ This playbook is opinionated. The core beliefs:
 
 ## Verification
 
-Local smoke test:
+Local smoke tests:
 
 ```bash
 reference/scripts/verify
+reference/scripts/verify-brownfield
 ```
 
 CI runs the same checks on every push and pull request via `.github/workflows/verify.yml`:
 - `bash -n setup.sh`
 - `python3 -m py_compile` for the reference Python scripts
 - `reference/scripts/verify`
+- `reference/scripts/verify-brownfield`
 
 ## Contributing
 

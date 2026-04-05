@@ -15,9 +15,11 @@ WORKSPACE_ROOT=/path/to/workspace <script>
 - `scripts/task` — tiny SQLite-backed task CLI (with explicit exit code `2` for not-found on `show`, `update`, `set-input`, and `delete`)
 - `scripts/mem-extract` — tiny memory extractor from daily notes into SQLite
 - `scripts/mem-search` — FTS-backed search over observations
+- `adapters/task-wrapper.example.py` — example mapping layer that wraps an existing task CLI/API into the playbook task contract
 - `hooks/the-wall.example.ts` — secret scan + destructive-exec gate skeleton
 - `hooks/task-enforcer.example.ts` — tiny reminder-style enforcement skeleton
 - `scripts/verify` — smoke-test script for the starter references
+- `scripts/verify-brownfield` — brownfield-specific verification for dirty repos, wrappers, archives, and selective backfill assumptions
 
 ## Philosophy
 

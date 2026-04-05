@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+"""Educational scaffold, not production hardened.
+
+Brownfield-focused verification for the playbook.
+Exercises adoption concerns that the generic starter verify does not:
+- existing dirty repo assumptions
+- wrapper-mode task integration example
+- archive-first conventions
+- selective memory backfill / tiered ingestion assumptions
+"""
+
+import json
+import os
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+ENV = dict(os.environ)
+
+
+def run(cmd, cwd=None, env=None, check=True):
+    print("+", " ".join(cmd))
+    return subprocess.run(cmd, cwd=cwd or REPO, env=env or ENV, text=True, check=check, capture_output=False)
+
+
+def capture(cmd, cwd=None, env=None):
+    return subprocess.check_output(cmd, cwd=cwd or REPO, env=env or ENV, text=True)
+
+
+def assert_contains(text, needle, context):
+    if needle not in text:
+        raise AssertionError(f"expected {needle!r} in {context}, got:\n{text}")
+
+
+def main():
+    adapter = REPO / "reference" / "adapters" / "task-wrapper.example.py"
+    verify = REPO / "reference" / "scripts" / "verify"
+    assert adapter.exists(), "missing adapter example"
+    assert verify.exists(), "missing generic verify"
+
+    run([sys.executable, "-m", "py_compile", str(adapter), str(REPO / "reference" / "scripts" / "verify-brownfield")])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        env = dict(ENV)
+        env["WORKSPACE_ROOT"] = str(root)
+
+        # Existing workspace / dirty repo assumptions.
+        (root / "memory").mkdir(parents=True)
+        (root / "archive" / "scripts").mkdir(parents=True)
+        (root / "notes").mkdir(parents=True)
+        (root / "memory" / "2026-04-01.md").write_text(
+            "# 2026-04-01\n\n## 09:00 — Decisions\n- Decided to archive the old task shell wrapper instead of deleting it.\n- Greeting from install wizard.\n"
+        )
+        (root / "memory" / "2026-04-02.md").write_text(
+            "# 2026-04-02\n\n## 11:00 — Migration\n- Migrated the dashboard restart notes into the new workspace docs.\n- Session started successfully.\n"
+        )
+        (root / "notes" / "discord-export-snippet.txt").write_text("hey\nhello\npong\n")
+        (root / "archive" / "scripts" / "task-shell-legacy.sh").write_text("#!/bin/sh\necho legacy\n")
+        (root / ".dirty-local-notes").write_text("simulate existing untracked ops artifact\n")
+
+        run(["git", "init"], cwd=root)
+        run(["git", "config", "user.name", "Brownfield Verifier"], cwd=root)
+        run(["git", "config", "user.email", "brownfield@example.com"], cwd=root)
+        (root / "README.md").write_text("brownfield temp repo\n")
+        run(["git", "add", "README.md"], cwd=root)
+        run(["git", "commit", "-m", "baseline"], cwd=root)
+        (root / "README.md").write_text("brownfield temp repo\nlocal change\n")
+
+        status = capture(["git", "status", "--short"], cwd=root)
+        assert_contains(status, " M README.md", "dirty git status")
+        assert_contains(status, "?? .dirty-local-notes", "dirty git status")
+
+        # Wrapper-mode task integration example should emit a legacy command in demo mode.
+        wrapper_out = capture(
+            [sys.executable, str(adapter), "start", "Brownfield task", "Keep existing API", "ops", "high"],
+            env=env,
+        )
+        payload = json.loads(wrapper_out)
+        assert payload["demo"] is True
+        legacy_command = payload["legacy_command"]
+        assert legacy_command[0:2] == ["tasks", "create"]
+        assert '"state": "doing"' in legacy_command[2]
+        assert '"bucket": "ops"' in legacy_command[2]
+
+        update_out = capture(
+            [sys.executable, str(adapter), "update", "abc123", "done", "validated via wrapper"],
+            env=env,
+        )
+        update_payload = json.loads(update_out)
+        assert update_payload["legacy_command"][0:3] == ["tasks", "patch", "abc123"]
+        assert '"state": "complete"' in update_payload["legacy_command"][3]
+
+        # Archive-first convention: archived legacy wrapper exists where expected.
+        assert (root / "archive" / "scripts" / "task-shell-legacy.sh").exists()
+
+        # Selective backfill assumption: only daily-note bullets are ingested; noisy export stays out.
+        run([sys.executable, str(REPO / "reference" / "scripts" / "mem-extract")], env=env)
+        search = capture([sys.executable, str(REPO / "reference" / "scripts" / "mem-search"), "archive"], env=env)
+        assert "archive the old task shell wrapper" in search.lower()
+        noisy = capture([sys.executable, str(REPO / "reference" / "scripts" / "mem-search"), "pong"], env=env)
+        if noisy.strip():
+            raise AssertionError(f"expected noisy backfill source to stay unindexed, got: {noisy}")
+
+    print("verify-brownfield: ok")
+
+
+if __name__ == "__main__":
+    main()

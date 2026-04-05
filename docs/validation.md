@@ -96,6 +96,20 @@ Spawn one sub-agent for a bounded task, then verify output manually:
 Expected:
 - no "trust the agent blindly" behavior
 
+## 8. Brownfield verification path
+
+If you are adopting the playbook into an already-active workspace, run the focused verifier too:
+
+```bash
+reference/scripts/verify-brownfield
+```
+
+It checks brownfield-specific assumptions including:
+- validation inside a deliberately dirty repo
+- wrapper-mode task integration behavior
+- archive-first conventions
+- selective memory backfill that prefers daily-note signal over noisy exports
+
 ## CI
 
 GitHub Actions workflow: `.github/workflows/verify.yml`
@@ -104,14 +118,18 @@ It runs on `push` and `pull_request` and checks:
 - `bash -n setup.sh`
 - `python3 -m py_compile` on the reference Python scripts
 - `reference/scripts/verify`
+- `reference/scripts/verify-brownfield`
 
 ## Optional: Run the bundled smoke test
 
 ```bash
 reference/scripts/verify
+reference/scripts/verify-brownfield
 ```
 
-This checks script syntax, task flow, task idempotency, sprint/delete contract, and duplicate-safe memory extraction.
+`verify` checks script syntax, task flow, task idempotency, sprint/delete contract, and duplicate-safe memory extraction.
+
+`verify-brownfield` adds dirty-repo, wrapper-mode, archive-first, and selective-backfill checks.
 
 ## Exit Criteria
 
