@@ -156,6 +156,35 @@ This audit trail is invaluable for:
 - Security incident investigation
 - Compliance (if you need it)
 
+#### Brownfield Scoping Guidance for `the-wall`
+
+This is where people get overeager and shoot themselves in the foot.
+
+In a mature production environment, do **not** start by making `the-wall` a universal hard-blocking policy engine for every harmless workflow. Start narrower:
+
+1. **Always-on hard blocks** for high-confidence cases
+   - credential leak patterns
+   - obviously destructive commands
+   - raw auth-bearing outbound requests
+
+2. **Priority visibility / enforcement zones**
+   - A2A communication surfaces
+   - webhook/reactor paths that can trigger follow-up actions
+   - sub-agent delegation
+   - external messaging / publish paths
+
+3. **Observe first elsewhere**
+   - routine local reads
+   - normal internal maintenance flows
+   - known-good operational commands that are already trusted
+
+The practical lesson: if your environment already has a webhook receiver plus an `a2a-reactor`-style worker, that boundary is one of the best places to apply stricter `the-wall` scrutiny. It sits near untrusted cross-agent input and close to downstream side effects.
+
+So the sane rollout is:
+- block high-confidence dangerous patterns everywhere
+- apply extra scrutiny around A2A + dangerous execution paths first
+- only broaden general enforcement after you've seen enough real traffic to trust the rules
+
 ### `agent-firewall` — Session Start Injection
 
 **Trigger:** `session_start` — fires when any session begins.

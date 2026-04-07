@@ -94,10 +94,96 @@ A2A Platform → POST https://your-agent.example.com/webhook/a2a
 Build a lightweight HTTP server that:
 1. Receives the POST request
 2. Verifies the HMAC signature
-3. Processes the event (create a task, notify in Discord, wake the agent)
-4. Returns 200 OK
+3. Queues the event durably
+4. Wakes the agent or reactor path
+5. Returns 200 OK immediately
 
 Deploy as a Docker container alongside your agent.
+
+**Do not put heavy business logic in the HTTP handler.** Webhook receivers should acknowledge fast, write durably, and hand off. If the receiver tries to do everything inline, retries get messy, timeouts multiply, and one bad event can stall the whole path.
+
+### The Recommended A2A Reactor Pattern
+
+In practice, the clean pattern is:
+
+```text
+A2A platform webhook
+  -> receiver verifies HMAC
+  -> append event to durable queue (JSONL, DB table, or equivalent)
+  -> trigger wake / enqueue follow-up work
+  -> reactor reads queued unprocessed events
+  -> reactor decides side effects
+  -> mark event processed
+```
+
+That reactor is the missing middle layer between "webhook arrived" and "agent did something useful."
+
+**Responsibilities split:**
+
+| Component | Job |
+|----------|-----|
+| Webhook receiver | Verify authenticity, persist event, respond 200 quickly |
+| Event queue | Durable buffer so events survive restarts and retries |
+| A2A reactor | Consume unprocessed events and perform workflow routing |
+| Agent / sub-agent | Handle the actual response or collaborative task when needed |
+
+### What the Reactor Actually Does
+
+A good `a2a-reactor`-style worker usually handles four categories of side effects:
+
+1. **Create or update local tasks**
+   - invitations
+   - inbound contract messages
+   - approvals
+   - collaborative task / sprint events
+
+2. **Notify humans in the monitoring channel**
+   - send concise Discord/Slack alerts when an operator should see something
+   - stay quiet for routine noise
+
+3. **Wake the agent only when needed**
+   - if a contract needs a reply, wake the main flow or spawn a controlled follow-up
+   - if the event is purely bookkeeping, process it without dragging the main session in
+
+4. **Maintain delivery semantics**
+   - mark processed events
+   - tolerate duplicate webhooks
+   - keep processing idempotent where possible
+
+### Wake + Cron Fallback Pattern
+
+A robust setup usually has both:
+
+- **Wake path** — the webhook receiver triggers the agent immediately when something actionable arrives
+- **Cron fallback** — a periodic `a2a-reactor` job re-checks the queue in case the wake path failed or the gateway was briefly unavailable
+
+This gives you low latency **and** recovery.
+
+The design rule is simple: webhooks should be real-time, but not trusted as your only delivery guarantee.
+
+### Queue Design Principles
+
+Your queue format can be simple. JSONL is often enough in an early system.
+
+Whatever you choose, preserve at least:
+- event id
+- event type
+- timestamp received
+- raw payload
+- processed flag / processed timestamp
+- error state if processing failed
+
+The queue is not just plumbing. It is also your audit trail and replay surface.
+
+### Replay and Safety Rules
+
+If you support replaying queued events:
+- make replay explicit, never automatic
+- avoid re-triggering external side effects blindly
+- distinguish between "re-run parsing" and "re-send messages"
+- keep a processed marker and a manual override path
+
+A reactor without replay controls is annoying. A reactor with unsafe replay is worse.
 
 ## Security Model
 
@@ -167,9 +253,13 @@ The specifics depend on the A2A platform version and deployment. Check the platf
 - [ ] Deploy the A2A platform (if you're hosting it)
 - [ ] Register your agent and configure API keys
 - [ ] Build a webhook receiver (Docker container)
+- [ ] Add a durable event queue for inbound webhook events
+- [ ] Build an `a2a-reactor`-style worker to consume queued events
+- [ ] Add wake-trigger plus cron fallback for the reactor path
 - [ ] Set up A2A hooks (`a2a-gate`, `a2a-audit-logger`, `task-enforcer`)
 - [ ] Configure Discord/Slack notifications for A2A events
 - [ ] Test contract lifecycle: propose → accept → send → close
+- [ ] Test duplicate delivery + replay safety on queued events
 - [ ] Integrate A2A tasks with your dashboard
 - [ ] Document A2A endpoints and keys in your secure storage (not in workspace files)
 

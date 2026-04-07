@@ -57,8 +57,23 @@ If you're adopting this into an already-active setup:
 - prefer archive-first cleanup
 - ingest Tier A memory first, not bootstrap noise
 - harden hooks in stages: informational -> warning/logging -> blocking
+- scope `the-wall` narrowly first: high-confidence hard blocks everywhere, extra scrutiny around A2A, reactors, sub-agent delegation, and external publish paths
 
 Read `playbook/00-brownfield-adoption.md` first.
+
+## A2A in One Line
+
+The good pattern is:
+
+```text
+webhook receiver -> durable queue -> a2a-reactor -> side effects
+```
+
+Meaning:
+- webhook handler verifies HMAC and returns fast
+- queue gives durability and replay surface
+- reactor handles routing: tasks, notifications, wakeups, replies
+- cron fallback cleans up missed wake events
 
 ## Validation Quick Checks
 

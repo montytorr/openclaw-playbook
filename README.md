@@ -16,7 +16,7 @@ Experienced developers who:
 
 - **Workspace structure** — a proven directory layout for agent memory, projects, scripts, and security
 - **Identity templates** — ready-to-customize files that give your agent personality, memory, and behavioral guardrails
-- **System documentation** — detailed descriptions of every operational pattern: hooks, crons, task tracking, security gates, dashboards, and more
+- **System documentation** — detailed descriptions of every operational pattern: hooks, crons, task tracking, security gates, dashboards, webhook queues, A2A reactors, and more
 - **Memory architecture** — the hybrid markdown + SQLite observation model that gives the agent real continuity
 - **Interface specifications** — enough detail to build compatible tools without copying our code
 - **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
@@ -122,6 +122,39 @@ If you don't want the full stack on day one, start with these four things:
 4. one security hook guarding dangerous tool calls
 
 That gives you continuity, visibility, a timing loop, and a perimeter. Add the rest after that works.
+
+## Two High-Leverage Patterns Worth Stealing
+
+### 1. The Wall should start narrow, not tyrannical
+
+In brownfield setups, `the-wall` should hard-block only high-confidence dangerous cases everywhere:
+- credential leaks
+- destructive commands
+- obviously auth-bearing outbound requests
+
+Then apply stricter scrutiny first around:
+- A2A surfaces
+- webhook/reactor paths
+- sub-agent delegation
+- external publish/send paths
+
+That's the sane order. Turning it into a universal blocker for every harmless workflow on day one is how people stop trusting the system.
+
+### 2. A2A works best with a receiver + queue + reactor
+
+The reliable A2A pattern is:
+
+```text
+webhook receiver -> durable queue -> a2a-reactor -> side effects
+```
+
+Meaning:
+- the receiver verifies HMAC and persists events fast
+- the queue absorbs retries and survives restarts
+- the reactor decides what to do: create tasks, notify humans, wake the agent, or stay quiet
+- a cron fallback can re-run the reactor if the immediate wake path fails
+
+If you remember one thing from the collaboration stack, remember that. Don't bury heavy logic in the webhook handler.
 
 ## How to Use This
 
