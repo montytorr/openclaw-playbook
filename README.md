@@ -18,6 +18,9 @@ Experienced developers who:
 - **Identity templates** — ready-to-customize files that give your agent personality, memory, and behavioral guardrails
 - **System documentation** — detailed descriptions of every operational pattern: hooks, crons, task tracking, security gates, dashboards, webhook queues, A2A reactors, and more
 - **Memory architecture** — the hybrid markdown + SQLite observation model that gives the agent real continuity
+- **LLM wiki guidance** — how to turn your memory system into a browsable knowledge surface for both humans and agents
+- **Knowledge graph patterns** — a practical model for linking notes, tasks, docs, people, projects, contracts, and events
+- **Setup guidance** — how to stand up the memory stack, define ingestion rules, and keep retrieval high-signal
 - **Interface specifications** — enough detail to build compatible tools without copying our code
 - **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
 - **Validation docs** — smoke tests for proving the loop actually works
@@ -71,13 +74,13 @@ openclaw-playbook/
 ├── playbook/              ← The main documentation (read in order)
 │   ├── 00-brownfield-adoption.md ← Adopting the playbook into active environments
 │   ├── 01-foundations.md  ← Workspace structure & identity files
-│   ├── 02-memory-system.md ← Daily notes, MEMORY.md, claude-mem
+│   ├── 02-memory-system.md ← Memory system, LLM wiki, knowledge graph, setup model
 │   ├── 03-task-management.md ← SQLite task CLI & Rule Zero
 │   ├── 04-hooks.md        ← Hook architecture & patterns
 │   ├── 05-security.md     ← Security model & threat defense
 │   ├── 06-cron-patterns.md ← Scheduling: heartbeats vs crons
 │   ├── 07-scripts-toolkit.md ← Utility scripts & patterns
-│   ├── 08-dashboard.md    ← Centralized visibility & monitoring
+│   ├── 08-dashboard.md    ← Visibility, monitoring, and the knowledge UI
 │   ├── 09-config.md       ← openclaw.json & environment setup
 │   ├── 10-clones.md       ← Multi-instance deployments
 │   ├── 11-nodes.md        ← Companion devices & browser profiles
@@ -100,10 +103,12 @@ openclaw-playbook/
 │   ├── adapters/          ← Example wrapper-mode integration artifacts
 │   ├── hooks/             ← Hook skeleton examples
 │   └── scripts/           ← Tiny task/memory reference scripts
-├── docs/                  ← Condensed onboarding & validation
+├── docs/                  ← Condensed onboarding, memory guides, and validation
 │   ├── case-studies/
 │   │   └── brownfield-migration-example.md ← Short active-workspace adoption example
+│   ├── llm-wiki.md        ← How the memory system becomes a human/agent wiki
 │   ├── one-pager.md       ← Fast-start summary
+│   ├── setup-memory-system.md ← Step-by-step memory stack setup guide
 │   └── validation.md      ← Smoke tests for the operating loop
 └── schemas/               ← Interface specifications
     ├── task-cli.md        ← Task CLI full interface spec
@@ -177,6 +182,8 @@ This playbook is opinionated. The core beliefs:
 
 - **Agents need identity, not just instructions.** A SOUL.md that defines personality prevents corporate bot syndrome and makes your agent genuinely useful to interact with.
 - **Memory is infrastructure.** Without a proper memory system, every session starts from zero. The real breakthrough is the hybrid model: markdown for narrative continuity, SQLite for observation storage and retrieval, and `MEMORY.md` as the operator-facing digest.
+- **The memory system should become an LLM wiki.** Durable memory is more valuable when humans and agents can browse it, search it, trace sources, and understand relationships between notes, tasks, docs, people, and projects.
+- **Knowledge graphs should stay practical.** The point is not ontology theater. The point is linking the things your agent already touches so retrieval, handoffs, and briefings improve over time.
 - **Track everything.** Rule Zero exists because autonomous agents that don't track their work become black boxes. If it happened, it should be logged.
 - **Brownfield beats fantasy.** Most real adoptions happen in already-active environments. Optimize for reversibility, wrappers, archives, and validation inside a dirty repo — not imaginary clean-room migrations.
 - **Security is non-negotiable.** The moment you give an agent access to your email, git, and infrastructure, you need defense in depth. Not paranoia — engineering.

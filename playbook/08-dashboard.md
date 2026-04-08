@@ -17,6 +17,7 @@ A dashboard gives you:
 - **Real-time task visibility** — what's in progress, what's done, what's planned
 - **Cost tracking** — how much you're spending on LLM calls per day/week/month
 - **System health** — Docker containers, disk space, cron status at a glance
+- **Knowledge visibility** — a searchable memory surface for notes, decisions, tasks, docs, people, and projects
 - **Trading visibility** — positions, P&L, trade history (if applicable)
 - **Security overview** — audit logs, integrity status, hook activity
 
@@ -39,6 +40,7 @@ A dashboard gives you:
 │                                          │
 │  Tabs:                                   │
 │  ├── Projects (tasks)                    │
+│  ├── Knowledge (memory / LLM wiki)       │
 │  ├── Trading (positions, P&L)            │
 │  ├── System (health, costs)              │
 │  └── Security (audit logs, integrity)    │
@@ -54,6 +56,30 @@ A dashboard gives you:
 ```
 
 ## Recommended Tabs
+
+### Knowledge Tab
+**Data sources:** memory SQLite tables, `MEMORY.md`, project files, task records, selected docs
+
+This is where the dashboard becomes the human-facing side of your memory system.
+
+Treat it as an **LLM wiki**, not a dump of notes.
+
+Displays:
+- global search across observations, notes, docs, tasks, and projects
+- entity/detail pages with summaries and source links
+- related items / backlinks / graph edges
+- timelines of changes or decisions
+- recent knowledge updates
+- "brief me on this" context assembly for a project, person, or issue
+- source-of-truth markers so operators know which item to trust
+
+Why it matters:
+- humans can inspect what the agent "knows"
+- agents can receive cleaner context packs
+- handoffs improve because knowledge is linked instead of buried
+- the system becomes auditable instead of mystical
+
+If your dashboard has a `knowledge` page, say that plainly in your docs: **this is the memory system surfaced as a wiki.**
 
 ### Projects Tab
 **Data source:** Tasks SQLite table
@@ -174,6 +200,18 @@ canvas/
 
 Mount the `canvas/` directory and serve these as static pages within the dashboard. The agent can update these files via hooks or cron jobs.
 
+## Design Principles for the Knowledge UI
+
+If you add a knowledge page, build for trust:
+
+- **Show sources** — every summary should link back to the note, task, doc, or observation behind it
+- **Show relationships** — related tasks, projects, people, and decisions should be one click away
+- **Prefer briefings over walls of text** — summaries first, raw material available underneath
+- **Keep write paths separate** — the dashboard can be read-heavy even if memory ingestion happens elsewhere
+- **Mark confidence / provenance when possible** — operator-entered note, extracted observation, imported external source, etc.
+
+The anti-pattern is a pretty page full of semantic fluff with no traceability. If users can't answer "where did this come from?" the page will stop being trusted.
+
 ## Building Your Dashboard
 
 We deliberately don't share our dashboard code — it's tightly coupled to our specific setup. Instead, here's what to build:
@@ -199,10 +237,12 @@ We deliberately don't share our dashboard code — it's tightly coupled to our s
 - [ ] Choose a dashboard approach (custom, Grafana, Datasette, or static)
 - [ ] Set up Docker container with read-only access to workspace data
 - [ ] Build Projects tab reading from tasks SQLite
+- [ ] Build Knowledge tab reading from memory/observation sources
 - [ ] Build System tab reading from LLM observer logs
 - [ ] Build Security tab reading from audit logs
 - [ ] Configure reverse proxy with TLS and authentication
 - [ ] Set up auto-rebuild on data changes (or periodic refresh)
+- [ ] Add source tracing, related items, and recent changes views to the Knowledge tab
 - [ ] Create a `status-report` cron that updates system metrics for the dashboard
 
 ---

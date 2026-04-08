@@ -37,6 +37,47 @@ The memory system solves the continuity problem with four layers:
 
 Together, these create a system where no important context is permanently lost, even across hundreds of sessions.
 
+## The Bigger Framing: This Is Your LLM Wiki
+
+Don't undersell this as "some notes plus a database." The durable memory stack is the foundation of an **LLM wiki**.
+
+That framing matters because it changes how people build it:
+
+- **Memory** is the purpose — preserving continuity, decisions, and context
+- **Knowledge graph** is the structure — the linked model beneath the surface
+- **LLM wiki** is the interface — the way humans and agents browse, search, and brief against that memory
+
+In practice, the memory system should answer questions like:
+- what do we already know about this project?
+- what did we decide last time?
+- which tasks, docs, and people connect to this issue?
+- what context should a new sub-agent receive before it starts work?
+
+Without that layer, your agent has logs. With it, your agent has usable memory.
+
+## Why It Matters
+
+Most teams discover the same failure mode the hard way:
+
+- the agent seems brilliant in-session
+- then a context reset happens
+- or the session ends
+- or the work resumes three days later
+- and now everyone is re-explaining the same thing again
+
+A real memory system fixes that.
+
+Operationally, it gives you:
+
+- **continuity across sessions**
+- **fewer repeated explanations**
+- **better handoffs to sub-agents and future sessions**
+- **retrieval grounded in prior evidence rather than vibe**
+- **compounding institutional memory instead of chat debris**
+- **a knowledge surface humans can inspect and trust**
+
+The blunt version: without memory, your AI is clever but amnesiac. With memory, it becomes cumulative.
+
 ## The Core Achievement: Hybrid Memory
 
 This is one of the strongest patterns in the whole playbook: **memory is not one thing**.
@@ -56,6 +97,40 @@ The hybrid model gets both:
 - `MEMORY.md` becomes the bridge between them
 
 That matters. It turns memory from a vague aspiration into actual infrastructure.
+
+## Knowledge Graph: Keep It Practical
+
+If you expose the memory system in a dashboard knowledge page, you are implicitly building a knowledge graph whether you call it that or not.
+
+The practical model is simple.
+
+### Useful entity types
+
+- memories
+- notes
+- documents
+- tasks
+- projects
+- contracts
+- people
+- events
+- external research
+- decisions
+
+### Useful relationships
+
+- related to
+- mentioned in
+- derived from
+- blocks
+- owned by
+- decided by
+- last updated by
+- source of truth for
+
+This is enough to build a very capable LLM wiki.
+
+Do **not** disappear into ontology theater. You don't need 70 node types before the thing is useful. Start with the objects your agent already touches every day and add structure only when retrieval quality benefits.
 
 ## Daily Notes
 
@@ -98,6 +173,21 @@ Daily notes live in `memory/YYYY-MM-DD.md`. One file per day, created automatica
 - Routine read operations (no need to log "read SOUL.md")
 - Trivial conversations that don't contain decisions or context
 - Secrets, credentials, or sensitive data (use secure storage for those)
+- Low-signal noise that harms retrieval quality more than it helps
+
+### Promotion Rule: Raw Notes vs Durable Memory
+
+Not everything written down deserves promotion into durable memory.
+
+A healthy system has at least three layers:
+
+1. **raw capture** — daily notes, session activity, logs
+2. **durable observations** — extracted facts, decisions, discoveries, fixes
+3. **knowledge surface** — wiki pages, search results, related-item views, briefings
+
+That promotion step is where quality lives.
+
+If you ingest everything blindly, your wiki turns into sludge. If you promote selectively, it becomes a trusted operating surface.
 
 ### Behavioral Rule: Write It Down
 
@@ -207,6 +297,65 @@ If you want a minimal runnable starting point, see:
 # - Path to MEMORY.md (workspace root)
 ```
 
+## Setup Guide: Building the Memory Stack
+
+The right order is:
+
+### 1. Define your sources
+Choose what can feed memory:
+- daily notes
+- project files
+- task tracker records
+- docs / READMEs
+- contract or execution logs
+- selected external research
+- optional chat summaries
+
+### 2. Define your storage layers
+Use separate layers for separate jobs:
+- **raw logs** for capture
+- **SQLite observations** for retrieval
+- **markdown digests** for human inspection
+- **project files** for ongoing structured work
+
+### 3. Define extraction rules
+Write down what gets promoted into durable memory:
+- decisions
+- recurring fixes
+- preferences
+- environment facts
+- major changes
+- error → root cause → fix chains
+
+If a piece of information would help a future session succeed faster, it probably belongs in memory.
+
+### 4. Define retrieval paths
+Support at least four ways to access knowledge:
+- keyword search
+- semantic retrieval / ranking
+- relationship traversal (related items)
+- briefings / context packs for agents
+
+### 5. Define the UI surface
+The memory system becomes an LLM wiki when you expose it through a readable interface:
+- search page
+- entity/detail pages
+- backlinks / related items
+- timelines
+- source tracing
+- recent changes
+- "brief me on this" summaries
+
+### 6. Define governance
+Decide early:
+- what is private vs shared
+- which sources are trusted enough to ingest
+- who can write memory directly
+- what gets archived vs kept hot
+- how secrets are excluded
+
+For a step-by-step implementation checklist, see `docs/setup-memory-system.md`.
+
 ### Querying Observations
 
 For searching past observations beyond what's in MEMORY.md:
@@ -311,6 +460,13 @@ Don't delete old notes — archive them. You never know when you'll need to look
 - [ ] Create `memory/heartbeat-state.json` with initial empty state
 - [ ] Write your first daily note manually to seed the system
 - [ ] Configure MEMORY.md auto-generation on session start
+- [ ] Expose the memory layer through a searchable dashboard knowledge page or wiki UI
+- [ ] Add source tracing so every summary can point back to the underlying note, task, doc, or observation
+- [ ] Document promotion rules so your knowledge graph stays high-signal instead of becoming a dumpster
+
+Related docs:
+- `docs/llm-wiki.md`
+- `docs/setup-memory-system.md`
 
 ---
 

@@ -14,6 +14,7 @@ If you only want the essence, start here.
    - write to `memory/YYYY-MM-DD.md`
    - extract observations into SQLite
    - regenerate `MEMORY.md` as a digest
+   - expose the memory layer as an LLM wiki / knowledge page
 
 3. **Task tracking**
    - `task start` before work
@@ -23,6 +24,18 @@ If you only want the essence, start here.
    - heartbeat for batched checks
    - cron for exact timing / isolated runs
    - hooks to guard dangerous tool calls
+
+## Why This Matters
+
+An autonomous agent without memory is just a very articulate goldfish.
+
+The point of this stack is not merely to save notes. It is to build a **memory system** that can become an **LLM wiki**:
+- humans can browse it
+- agents can retrieve from it
+- decisions survive context resets
+- projects accumulate knowledge instead of repeating explanations
+
+That is what turns an agent from session-based assistance into compounding operational leverage.
 
 ## Minimum Viable Loop
 
@@ -84,3 +97,15 @@ Meaning:
 - Can a completed task be found later via memory search?
 
 If yes, you have infrastructure — not just prompts.
+
+## If You Build One Extra Thing
+
+Build the knowledge page.
+
+Even a simple version pays off:
+- search across notes, tasks, and docs
+- show related items
+- show sources
+- let a human ask "what do we know about this?"
+
+That is the first real version of the LLM wiki.
