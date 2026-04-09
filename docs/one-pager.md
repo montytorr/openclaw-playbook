@@ -58,8 +58,8 @@ task update <id> done "What changed"
 ## Default Model Split (Codex-first)
 
 - Main agent: `gpt-5.4` + `thinking=medium`
-- Cron/reactors: `spark` + `thinking=low`
-- Mechanical loops: `spark` + `thinking=disabled`
+- Cron/reactors: `spark` if routable, else `gpt-5.3-codex`, with `thinking=low`
+- Mechanical loops: `spark` if routable, else `gpt-5.3-codex`, with `thinking=disabled`
 - Sub-agents: `thinking=off` unless reasoning is actually needed
 
 ## Brownfield First, If Applicable

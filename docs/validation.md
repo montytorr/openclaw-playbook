@@ -79,8 +79,8 @@ Expected:
 
 Check your config / cron definitions:
 - heavy review jobs → `gpt-5.4` + `medium`
-- routine checks → `spark` + `low`
-- mechanical loops → `spark` + `disabled`
+- routine checks → `spark` if live-routable, else `gpt-5.3-codex`, with `low`
+- mechanical loops → `spark` if live-routable, else `gpt-5.3-codex`, with `disabled`
 
 Expected:
 - no accidental expensive model on high-frequency jobs

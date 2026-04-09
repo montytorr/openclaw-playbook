@@ -2,7 +2,7 @@
 
 An educational playbook for running an autonomous OpenClaw agent. Built from real operational patterns — battle-tested across months of 24/7 autonomous operation.
 
-**Current examples reflect a Codex-first production setup** (`gpt-5.4` + `gpt-5.3-codex-spark`) after the Claude OAuth path stopped being a reliable OpenClaw runtime option.
+**Current examples reflect a Codex-first production setup** with `gpt-5.4` as the primary model, `gpt-5.3-codex` as the stable fallback, and `spark` treated as a conditional fast lane rather than a blind default fallback.
 
 ## Who This Is For
 
