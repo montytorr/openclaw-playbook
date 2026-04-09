@@ -34,7 +34,7 @@ You wake up fresh each session. These files are your continuity:
 
 Capture what matters. Decisions, context, things to remember.
 
-<!-- Configure your memory auto-generation tool (e.g., claude-mem) to manage MEMORY.md -->
+<!-- Configure your memory pipeline (preferably OpenClaw native local memory + MEMORY.md refresh) to manage MEMORY.md -->
 
 ### 📋 Projects — Plans That Survive Context Resets
 - When starting anything multi-step or complex, create `projects/project-name.md`

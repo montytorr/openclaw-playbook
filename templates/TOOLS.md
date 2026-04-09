@@ -13,11 +13,16 @@ Skills define *how* tools work. This file is for *your* specifics — the stuff 
 - **Use for:** Web scraping, research, automated browsing
 - **Limitations:** Gets blocked by Cloudflare/CAPTCHAs
 
-### 2. `node-browser` — Dedicated Browser on Node Device
+### 2. Node browser target — Dedicated Browser on Node Device
 - **Where:** Mac/PC connected as node
-- **Profile:** `profile="node-browser"`
-- **CDP port:** 9222
+- **Use via:** `target="node"` (pin a node when needed)
+- **CDP port / bridge:** document if you maintain one
 - **Use for:** Authenticated browsing, bot-detection bypass
+
+### 3. `profile="user"` — Human's Logged-In Host Browser
+- **Where:** Local host browser profile
+- **Use for:** Cases that truly need the human's existing session
+- **Warning:** Highest trust, use sparingly
 -->
 
 ## 📁 Project-Specific Notes

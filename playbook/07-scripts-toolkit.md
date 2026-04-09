@@ -188,7 +188,7 @@ self-critique history --category trading
 
 ### `mem-search` — Observation Search
 
-**Purpose:** Full-text search over the claude-mem SQLite database.
+**Purpose:** Search the durable memory store, whether that's OpenClaw native local memory, your own SQLite observations table, or a thin wrapper over both.
 
 **Interface:**
 ```bash

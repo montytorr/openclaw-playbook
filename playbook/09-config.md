@@ -1,6 +1,6 @@
 # Chapter 9: Configuration
 
-OpenClaw is configured through `openclaw.json` and environment variables. This chapter covers the structure and key settings — not the full reference (check OpenClaw docs for that), but the operational patterns that matter.
+OpenClaw is configured through `openclaw.json` and environment variables. This chapter covers the structure and key settings, not the full reference (check OpenClaw docs for that), but the operational patterns that matter.
 
 ## openclaw.json Overview
 
@@ -12,6 +12,7 @@ The main configuration file lives at `~/.openclaw/openclaw.json` (or wherever yo
 - Hook registration
 - Cron job definitions
 - Plugin configuration
+- Native memory configuration
 - TTS settings
 - Message formatting
 
@@ -62,6 +63,32 @@ Key decisions:
 - **Bootstrap files** — these are injected into every session as project context. Order matters (most important first).
 - **Bootstrap size limits** — prevent massive files from consuming the entire context window.
 
+### Native Memory Configuration
+
+As of April 2026, the sane default is to use **OpenClaw native local memory** rather than leaning on a legacy external memory plugin name.
+
+A practical baseline looks like this:
+
+```json
+{
+  "memorySearch": {
+    "provider": "local",
+    "fallback": "none",
+    "sources": ["memory", "sessions"]
+  }
+}
+```
+
+What this gets you:
+- local embeddings/vector/FTS-backed retrieval
+- `memory/*.md` and indexed session history as search sources
+- fewer migration traps than older bolt-on memory stacks
+
+Operationally:
+- verify health with `openclaw memory status --deep`
+- keep `MEMORY.md` as a digest, not the primary search engine
+- treat dreaming as optional synthesis on top of retrieval, not a substitute for retrieval itself
+
 ### Model Configuration
 
 As of April 2026, one practical production pattern is **Codex-only routing**.
@@ -104,7 +131,7 @@ A solid Codex setup looks like this:
     }
   },
   "plugins": {
-    "allow": ["claude-mem", "discord", "browser", "openai", "quota-aware-codex-router"],
+    "allow": ["discord", "browser", "openai", "quota-aware-codex-router"],
     "entries": {
       "quota-aware-codex-router": {
         "enabled": true,
@@ -114,6 +141,8 @@ A solid Codex setup looks like this:
   }
 }
 ```
+
+If you use OpenClaw native memory, do **not** keep stale legacy memory aliases in `plugins.allow` just to make old docs happy. Prefer the native memory stack and, if needed, bind the memory slot to `memory-core` instead of carrying a dead plugin name forever.
 
 **Model strategy:**
 - `gpt-5.4` (`codex`) for the main agent and heavier reasoning work

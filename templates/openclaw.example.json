@@ -54,6 +54,14 @@
       }
     ]
   },
+  "memorySearch": {
+    "provider": "local",
+    "fallback": "none",
+    "sources": [
+      "memory",
+      "sessions"
+    ]
+  },
   "channels": {
     "discord": {
       "token": "<YOUR_DISCORD_BOT_TOKEN>",

@@ -24,28 +24,28 @@ The most valuable node capability is browser automation. Server-side headless br
 ### Profile Architecture
 
 ```
-Browser Profiles:
-├── openclaw (default)     — Headless Chromium on server. Fast, always available, gets bot-blocked.
-├── node-browser           — Dedicated Chrome on a node device. Real browser, bypasses detection.
-└── user-browser           — Human's actual browser. Last resort, requires manual attachment.
+Browser Targets:
+├── openclaw (default)     — Headless managed browser. Fast, always available, gets bot-blocked.
+├── node target            — Dedicated browser on a paired node device. Real browser, bypasses detection.
+└── profile="user"        — Human's local logged-in browser on the host. Last resort.
 ```
 
 **Decision tree:**
-1. No auth needed, simple page? → `openclaw` (headless, server-side)
-2. Bot-blocked or needs authenticated session? → Node browser (real Chrome via CDP)
-3. Needs the human's personal logged-in session? → Ask human to attach their browser
+1. No auth needed, simple page? → default `openclaw` browser
+2. Bot-blocked or needs a dedicated trusted browser? → node browser (`target="node"`)
+3. Needs the human's personal logged-in session on the host? → `profile="user"`
 
 ### CDP (Chrome DevTools Protocol) Tunnels
 
 > **Warning:** CDP access is effectively remote control of a trusted browser session. Treat it like privileged access, because it is.
 
-To use a node's browser from the server, you need a tunnel:
+To use a node's browser from the server, you may need a tunnel or browser proxy, depending on how the node is connected:
 
 ```
 [Server] ←── SSH reverse tunnel ──→ [Node device running Chrome with --remote-debugging-port=9222]
 ```
 
-The agent connects to `localhost:9222` on the server, which tunnels to the node's Chrome instance. This gives full browser automation capabilities — navigation, clicking, typing, screenshots, DOM inspection — all on a real browser that websites trust.
+The agent connects through the OpenClaw browser bridge to the node's Chrome instance. In some deployments that still means `localhost:9222` over an SSH reverse tunnel, but the deeper point is the same: this gives full browser automation capabilities, all on a real browser that websites trust.
 
 That power is exactly why you should keep it tightly scoped:
 - use a dedicated browser profile, not the human's main browser
