@@ -25,10 +25,11 @@ The main configuration file lives at `~/.openclaw/openclaw.json` (or wherever yo
     "defaults": {
       "model": {
         "primary": "openai-codex/gpt-5.4",
-        "fallbacks": ["openai-codex/gpt-5.3-codex-spark"]
+        "fallbacks": ["openai-codex/gpt-5.3-codex"]
       },
       "models": {
         "openai-codex/gpt-5.4": { "alias": "codex" },
+        "openai-codex/gpt-5.3-codex": {},
         "openai-codex/gpt-5.3-codex-spark": { "alias": "spark" }
       },
       "workspace": "/root/clawd",
@@ -86,10 +87,11 @@ A solid Codex setup looks like this:
     "defaults": {
       "model": {
         "primary": "openai-codex/gpt-5.4",
-        "fallbacks": ["openai-codex/gpt-5.3-codex-spark"]
+        "fallbacks": ["openai-codex/gpt-5.3-codex"]
       },
       "models": {
         "openai-codex/gpt-5.4": { "alias": "codex" },
+        "openai-codex/gpt-5.3-codex": {},
         "openai-codex/gpt-5.3-codex-spark": { "alias": "spark" }
       },
       "thinkingDefault": "medium",
@@ -100,17 +102,48 @@ A solid Codex setup looks like this:
         "primary": "openai/gpt-image-1"
       }
     }
+  },
+  "plugins": {
+    "allow": ["claude-mem", "discord", "browser", "openai", "quota-aware-codex-router"],
+    "entries": {
+      "quota-aware-codex-router": {
+        "enabled": true,
+        "config": {}
+      }
+    }
   }
 }
 ```
 
 **Model strategy:**
 - `gpt-5.4` (`codex`) for the main agent and heavier reasoning work
-- `gpt-5.3-codex-spark` (`spark`) as the fast/cheap fallback
+- `gpt-5.3-codex` as the stable fallback
+- `gpt-5.3-codex-spark` (`spark`) stays available, but should be routed by policy, not used as a blind fallback
 - main session default thinking: `medium`
 - sub-agent default thinking: `off` (escalate only when needed)
 - per-cron overrides based on workload, not habit
 - image generation model remains separate from chat model
+
+### Quota-Aware Spark Routing
+
+If you keep Spark in the catalog, treat it as a **conditionally available fast lane**, not a guaranteed fallback.
+
+The production-safe pattern is:
+- keep `gpt-5.4` as primary
+- keep `gpt-5.3-codex` as the real fallback
+- expose `spark` as an alias only
+- use a local routing plugin to decide when Spark is actually usable
+- refresh Spark availability from live usage and provider-visible model availability on a cron
+
+Why? Because Spark availability can drift independently of the stable Codex path. A direct fallback chain like `gpt-5.4 -> spark` looks elegant until Spark is unavailable and your supposedly safe fallback becomes the thing that breaks.
+
+A practical router policy looks like:
+- high complexity -> `gpt-5.4`
+- medium complexity -> `gpt-5.3-codex`
+- low complexity -> `spark` only if current state says it is usable
+- otherwise low complexity -> `gpt-5.3-codex`
+
+This is also the cleanest place to express real-time quota policy, because OpenClaw's built-in status surfaces provider/account usage well, but not every model-specific edge case.
 
 ### A Practical Thinking Policy
 
@@ -119,8 +152,8 @@ This ended up being the useful split in production:
 | Workload | Model | Thinking |
 |---|---|---|
 | Main conversations | `gpt-5.4` | `medium` |
-| High-frequency cron/reactor checks | `spark` | `low` |
-| Mechanical watchdog loops | `spark` | `disabled` / `off` |
+| High-frequency cron/reactor checks | `spark` if live-routable, else `gpt-5.3-codex` | `low` |
+| Mechanical watchdog loops | `spark` if live-routable, else `gpt-5.3-codex` | `disabled` / `off` |
 | Nightly reviews, retros, strategy | `gpt-5.4` | `medium` |
 | Sub-agents by default | inherited / override | `off` |
 
@@ -249,6 +282,7 @@ If you migrate providers, do the cleanup properly:
 - normalize thinking levels job-by-job
 - clear stale `sessionKey` pinning on cron jobs if old sessions keep surfacing legacy model metadata
 - verify with greps or config inspection that no old provider strings remain in active config
+- if you keep optional fast-lane models like Spark, make sure cron jobs route through the same live policy rather than pinning them blindly
 
 Cross-reference: see Chapter 6 for cron patterns and the heartbeat vs cron decision tree.
 

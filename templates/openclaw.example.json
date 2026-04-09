@@ -17,13 +17,14 @@
       "model": {
         "primary": "openai-codex/gpt-5.4",
         "fallbacks": [
-          "openai-codex/gpt-5.3-codex-spark"
+          "openai-codex/gpt-5.3-codex"
         ]
       },
       "models": {
         "openai-codex/gpt-5.4": {
           "alias": "codex"
         },
+        "openai-codex/gpt-5.3-codex": {},
         "openai-codex/gpt-5.3-codex-spark": {
           "alias": "spark"
         }
@@ -144,13 +145,31 @@
         "payload": {
           "kind": "agentTurn",
           "message": "Run system health check. Only report if something needs attention.",
-          "model": "openai-codex/gpt-5.3-codex-spark",
+          "model": "openai-codex/gpt-5.3-codex",
           "thinking": "low",
           "timeoutSeconds": 300
         },
         "delivery": {
           "mode": "announce",
           "channel": "<YOUR_CHANNEL_ID>"
+        }
+      },
+      {
+        "id": "spark-availability-refresh",
+        "name": "Spark Availability Refresh",
+        "enabled": true,
+        "schedule": {
+          "kind": "every",
+          "everyMs": 900000
+        },
+        "sessionTarget": "isolated",
+        "payload": {
+          "kind": "agentTurn",
+          "message": "Refresh quota/router state for Spark availability and stay silent on success.",
+          "timeoutSeconds": 180
+        },
+        "delivery": {
+          "mode": "none"
         }
       }
     ]
@@ -168,12 +187,22 @@
     }
   },
   "plugins": {
+    "allow": [
+      "discord",
+      "browser",
+      "openai",
+      "quota-aware-codex-router"
+    ],
     "entries": {
       "device-pair": {
         "enabled": true,
         "config": {
           "publicUrl": "<YOUR_GATEWAY_PUBLIC_URL>"
         }
+      },
+      "quota-aware-codex-router": {
+        "enabled": true,
+        "config": {}
       }
     }
   },
