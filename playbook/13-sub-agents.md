@@ -146,6 +146,18 @@ python -c "import ast; ast.parse(open('<file>.py').read())"
 
 The verification step is not optional. "The sub-agent said it worked" is not verification.
 
+### Post-Sub-Agent Verification Checklist
+
+Before you mark delegated work as real:
+
+- inspect the files actually changed
+- compare the diff against the original brief
+- run the smallest relevant tests or syntax checks
+- confirm no protected files or unrelated paths were touched
+- record the outcome in the parent task or audit note
+
+If any of those fail, the delegated run is not complete yet. It is only a draft.
+
 ## Mode Options
 
 ### `mode="run"` — One-Shot
@@ -219,7 +231,13 @@ Sub-agents inherit security constraints through hooks, specifically:
 - **`agent-firewall`** injects security rules at session start — sub-agents get the same rules
 - **`the-wall`** intercepts tool calls — sub-agents are gated by the same credential scanner and tier system
 - **`delegation-audit`** logs every sub-agent spawn with context
-- **`delegation-policy`** enforces spawn limits and allowed operations
+- **`delegation-policy`** enforces spawn limits, required task tracking, and allowed operations
+
+Minimum governance rules:
+- no spawn without a tracked parent task
+- no blind trust of completion claims
+- no shared-file parallel edits without an explicit plan
+- bounded timeout on every non-trivial delegated run
 
 What sub-agents CANNOT do:
 - Access MEMORY.md (memory segmentation)
@@ -252,7 +270,7 @@ A good rule of thumb: if the sub-agent's context load (bootstrap + task) costs m
 ## What to Build
 
 - [ ] Set up `delegation-audit` hook to log all sub-agent spawns
-- [ ] Set up `delegation-policy` hook to enforce spawn limits
+- [ ] Set up `delegation-policy` hook to enforce spawn limits and tracked-parent-task requirements
 - [ ] Configure sub-agent depth limits in your security rules
 - [ ] Add task tracking discipline: always `task start` before `sessions_spawn`
 - [ ] Build a verification checklist for sub-agent output (git diff, tests, file checks)

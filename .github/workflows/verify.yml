@@ -21,7 +21,7 @@ jobs:
         run: bash -n setup.sh
 
       - name: Compile reference Python scripts
-        run: python3 -m py_compile reference/scripts/task reference/scripts/mem-extract reference/scripts/mem-search reference/scripts/verify reference/scripts/verify-brownfield reference/adapters/task-wrapper.example.py
+        run: python3 -m py_compile reference/scripts/task reference/scripts/mem-extract reference/scripts/mem-search reference/scripts/integrity-check reference/scripts/verify-memory-readiness reference/scripts/verify reference/scripts/verify-brownfield reference/scripts/verify-local reference/adapters/task-wrapper.example.py
 
       - name: Run reference verification
         run: |

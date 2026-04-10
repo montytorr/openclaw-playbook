@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""Educational scaffold, not production hardened.
+
+Local rollout verifier for an already-active workspace.
+Runs the smallest useful stack:
+- integrity baseline present and clean
+- memory pipeline is minimally ready
+- generic reference verifier still passes
+- brownfield verifier still passes
+"""
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+ENV = dict(os.environ)
+
+
+def run(cmd, cwd=None, env=None):
+    print("+", " ".join(str(x) for x in cmd))
+    subprocess.run(cmd, cwd=cwd or REPO, env=env or ENV, check=True)
+
+
+def main():
+    run([sys.executable, str(REPO / "reference" / "scripts" / "integrity-check"), "check"])
+    run([sys.executable, str(REPO / "reference" / "scripts" / "verify-memory-readiness")])
+    run([sys.executable, str(REPO / "reference" / "scripts" / "verify")])
+    run([sys.executable, str(REPO / "reference" / "scripts" / "verify-brownfield")])
+    print("verify-local: ok")
+
+
+if __name__ == "__main__":
+    main()

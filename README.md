@@ -23,9 +23,9 @@ Experienced developers who:
 - **Setup guidance** — how to stand up the memory stack, define ingestion rules, and keep retrieval high-signal
 - **Interface specifications** — enough detail to build compatible tools without copying our code
 - **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
-- **Validation docs** — smoke tests for proving the loop actually works
-- **Smoke-test script** — a bundled verification pass for the starter references
-- **Brownfield extras** — adapter scaffolds, migration case study, and verifier for active-workspace adoption
+- **Validation docs** — a verification-first rollout path for proving the loop actually works
+- **Verification scripts** — bundled starter checks for integrity, memory readiness, generic smoke tests, brownfield checks, and full local rollout validation
+- **Brownfield extras** — adapter scaffolds, migration case studies, and verifiers for active-workspace adoption
 - **GitHub Actions CI** — a minimal verify workflow for push + pull_request
 
 ## What You Don't Get
@@ -105,7 +105,8 @@ openclaw-playbook/
 │   └── scripts/           ← Tiny task/memory reference scripts
 ├── docs/                  ← Condensed onboarding, memory guides, and validation
 │   ├── case-studies/
-│   │   └── brownfield-migration-example.md ← Short active-workspace adoption example
+│   │   ├── brownfield-migration-example.md ← Short active-workspace adoption example
+│   │   └── local-rollout-validation-example.md ← Verification-first local rollout example
 │   ├── llm-wiki.md        ← How the memory system becomes a human/agent wiki
 │   ├── one-pager.md       ← Fast-start summary
 │   ├── setup-memory-system.md ← Step-by-step memory stack setup guide
@@ -173,8 +174,9 @@ If you remember one thing from the collaboration stack, remember that. Don't bur
 4. **Customize templates** — the files in `templates/` are starting points; make them yours
 5. **Use `reference/` for starter implementations** — task CLI, memory extractor/search, hook skeletons
 6. **Run `docs/validation.md` or `reference/scripts/verify`** — prove the starter loop works
-7. **If you're in a live workspace, also run `reference/scripts/verify-brownfield`** — validate dirty-repo, wrapper, archive, and memory-backfill assumptions
-8. **Iterate** — your agent's infrastructure will evolve. That's the point.
+7. **If you're in a live workspace, treat verification as a stack, not one script** — run `reference/scripts/integrity-check init`, then `reference/scripts/integrity-check check`, `reference/scripts/verify-memory-readiness`, and `reference/scripts/verify-local`
+8. **Use `reference/scripts/verify-brownfield` for adopt-in-place work** — validate dirty-repo, wrapper, archive, and memory-backfill assumptions
+9. **Iterate** — your agent's infrastructure will evolve. That's the point.
 
 ## Philosophy
 
@@ -199,11 +201,22 @@ reference/scripts/verify
 reference/scripts/verify-brownfield
 ```
 
-CI runs the same checks on every push and pull request via `.github/workflows/verify.yml`:
+Recommended live-workspace rollout stack:
+
+```bash
+reference/scripts/integrity-check init
+reference/scripts/integrity-check check
+reference/scripts/verify-memory-readiness
+reference/scripts/verify-local
+```
+
+CI runs the same starter checks on every push and pull request via `.github/workflows/verify.yml`:
 - `bash -n setup.sh`
 - `python3 -m py_compile` for the reference Python scripts
 - `reference/scripts/verify`
 - `reference/scripts/verify-brownfield`
+
+For brownfield adoption, the practical rule is simple: runtime truth beats manifest assumptions. Use the bundled docs and references to verify what your live system actually does before you bless any migration as complete.
 
 ## Contributing
 

@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+"""Educational scaffold, not production hardened.
+
+Checks that a workspace has the minimum moving parts for memory to be useful:
+- memory/ exists
+- at least one daily note exists
+- extraction runs
+- search returns a known observation
+"""
+
+import os
+import sqlite3
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+ENV = dict(os.environ)
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", Path.home() / "clawd")).resolve()
+
+
+def run(cmd, cwd=None, env=None):
+    print("+", " ".join(str(x) for x in cmd))
+    subprocess.run(cmd, cwd=cwd or REPO, env=env or ENV, check=True)
+
+
+def capture(cmd, cwd=None, env=None):
+    return subprocess.check_output(cmd, cwd=cwd or REPO, env=env or ENV, text=True)
+
+
+def main():
+    memory_dir = WORKSPACE_ROOT / "memory"
+    if not memory_dir.exists():
+        raise SystemExit("memory directory missing")
+
+    notes = sorted(memory_dir.glob("*.md"))
+    if not notes:
+        raise SystemExit("no daily notes found under memory/")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        env = dict(ENV)
+        env["WORKSPACE_ROOT"] = tmp
+        tmp_root = Path(tmp)
+        (tmp_root / "memory").mkdir(parents=True)
+        probe = tmp_root / "memory" / "2026-04-10.md"
+        probe.write_text(
+            "# 2026-04-10\n\n## 09:00 — Memory readiness\n- Memory extraction is working for the workspace.\n- Retrieval should find this readiness probe.\n"
+        )
+
+        run([sys.executable, str(REPO / "reference" / "scripts" / "mem-extract")], env=env)
+        run([sys.executable, str(REPO / "reference" / "scripts" / "mem-extract")], env=env)
+        out = capture([sys.executable, str(REPO / "reference" / "scripts" / "mem-search"), "readiness probe"], env=env)
+        if "readiness probe" not in out.lower():
+            raise AssertionError(f"expected readiness probe in search output, got: {out}")
+
+        db = sqlite3.connect(tmp_root / "data" / "agent.db")
+        count = db.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
+        assert count == 2, f"expected 2 observations from probe note, got {count}"
+
+    print("verify-memory-readiness: ok")
+    print(f"workspace memory notes detected: {len(notes)}")
+
+
+if __name__ == "__main__":
+    main()

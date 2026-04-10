@@ -54,6 +54,27 @@ Do this before you copy a single template file.
 
 If you cannot answer those seven questions, you're not ready to "install the playbook." You're ready to inventory reality.
 
+## Runtime Truth Beats Manifest Theory
+
+In brownfield systems, docs, manifests, and plugin metadata are hints, not proof.
+
+What matters is what the live runtime actually does.
+
+That means:
+- read the real implementation path when behavior matters
+- verify live config conditions directly
+- check exporters, collectors, and external integrations with real signals
+- treat "the manifest implies it should work" as unverified until the runtime agrees
+
+This matters most for:
+- observability wiring
+- hook ordering and enforcement points
+- plugin enablement
+- wrappers around existing CLIs or APIs
+- any migration that claims a system is now "covered"
+
+If there is tension between the docs and the runtime, trust the runtime and fix the docs.
+
 ## Step 1: Take a Baseline Snapshot
 
 Before changes, capture the environment as it actually exists.
@@ -194,6 +215,25 @@ Why:
 - document known pre-existing dirt in the baseline snapshot
 - keep migration commits scoped and boring
 - merge when the docs + validation are coherent, not when the entire repo is suddenly perfect
+
+## Brownfield Verification Stack
+
+Verification should be treated as a first-class adoption artifact, not a nice-to-have after the docs feel polished.
+
+A practical live-workspace stack looks like this:
+
+1. `integrity-check init` to baseline protected files
+2. `integrity-check check` to confirm no unexpected drift
+3. `verify-memory-readiness` to confirm the memory pipeline is minimally real
+4. `verify` to prove the starter loop still works
+5. `verify-brownfield` to validate adopt-in-place assumptions
+6. `verify-local` to run the stack together once the workspace has been wired up
+
+The point is not the exact names. The point is that a rollout should have repeatable checks for:
+- protected-file integrity
+- memory readiness
+- generic loop health
+- brownfield-specific assumptions
 
 ## Step 5: Validate Without Requiring a Pristine Repo
 
@@ -450,6 +490,8 @@ Success looks like:
 - memory ingestion favors signal over noise
 - hooks harden in stages
 - validation works even with known repo dirt
+- runtime behavior is verified directly instead of inferred from manifests
+- delegation is governed and post-subagent output is checked before trust is granted
 
 That's adulthood, not greenfield cosplay.
 

@@ -2,6 +2,28 @@
 
 A playbook is only useful if you can prove the loop works.
 
+## Verification-first rollout stack
+
+For a live workspace, do not rely on one feel-good smoke test.
+
+Use a layered verifier stack:
+
+```bash
+reference/scripts/integrity-check init
+reference/scripts/integrity-check check
+reference/scripts/verify-memory-readiness
+reference/scripts/verify
+reference/scripts/verify-brownfield
+reference/scripts/verify-local
+```
+
+Why this order:
+- `integrity-check` catches protected-file drift early
+- `verify-memory-readiness` confirms the memory path is actually usable
+- `verify` proves the starter loop still works
+- `verify-brownfield` proves adopt-in-place assumptions inside messy reality
+- `verify-local` gives you one repeatable local rollout pass once the first pieces exist
+
 ## 1. Workspace bootstraps correctly
 
 ```bash
@@ -51,6 +73,17 @@ Expected:
 - a second run does not duplicate observations
 - search returns the stored observation
 
+## 3.5 Memory readiness verifier exists
+
+```bash
+reference/scripts/verify-memory-readiness
+```
+
+Expected:
+- the workspace has a `memory/` directory
+- at least one daily note exists
+- extraction/search are functional in the readiness probe
+
 ## 4. Hook skeleton behaves as expected
 
 Read `reference/hooks/the-wall.example.ts` and adapt it into your hook runtime.
@@ -96,7 +129,18 @@ Spawn one sub-agent for a bounded task, then verify output manually:
 Expected:
 - no "trust the agent blindly" behavior
 
-## 8. Brownfield verification path
+## 8. Protected-file integrity baseline exists
+
+```bash
+reference/scripts/integrity-check init
+reference/scripts/integrity-check check
+```
+
+Expected:
+- a baseline file is created
+- later checks report `ok` until a protected file changes unexpectedly
+
+## 9. Brownfield verification path
 
 If you are adopting the playbook into an already-active workspace, run the focused verifier too:
 
@@ -110,6 +154,18 @@ It checks brownfield-specific assumptions including:
 - archive-first conventions
 - selective memory backfill that prefers daily-note signal over noisy exports
 
+## 10. Full local rollout verifier
+
+```bash
+reference/scripts/verify-local
+```
+
+Expected:
+- integrity check passes
+- memory readiness passes
+- generic verify passes
+- brownfield verify passes
+
 ## CI
 
 GitHub Actions workflow: `.github/workflows/verify.yml`
@@ -120,23 +176,37 @@ It runs on `push` and `pull_request` and checks:
 - `reference/scripts/verify`
 - `reference/scripts/verify-brownfield`
 
-## Optional: Run the bundled smoke test
+The bundled CI stays intentionally small. Your real workspace can and should add stricter local verifiers around integrity, memory readiness, and deployment-specific checks.
+
+## Optional: Run the bundled verifier stack
 
 ```bash
+reference/scripts/integrity-check init
+reference/scripts/integrity-check check
+reference/scripts/verify-memory-readiness
 reference/scripts/verify
 reference/scripts/verify-brownfield
+reference/scripts/verify-local
 ```
+
+`integrity-check` covers protected-file drift.
+
+`verify-memory-readiness` covers minimum memory-pipeline usability.
 
 `verify` checks script syntax, task flow, task idempotency, sprint/delete contract, and duplicate-safe memory extraction.
 
 `verify-brownfield` adds dirty-repo, wrapper-mode, archive-first, and selective-backfill checks.
 
+`verify-local` runs the recommended live-workspace stack in one pass.
+
 ## Exit Criteria
 
 You are ready to build on the playbook when:
+- protected files have an integrity baseline
 - memory is writable and searchable
 - tasks are visible in SQLite
 - heartbeat works
 - one hook can block unsafe actions
 - cron models/thinking are intentional
 - sub-agent output is verified, not trusted
+- brownfield assumptions are checked with repeatable scripts, not conversational confidence
