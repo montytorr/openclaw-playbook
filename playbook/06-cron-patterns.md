@@ -280,7 +280,7 @@ A good trigger list for increasing thinking:
 - [ ] Create `memory/heartbeat-state.json` for check tracking
 - [ ] Configure 2-3 essential cron jobs (morning briefing, nightly health, integrity)
 - [ ] Define quiet hours in your heartbeat configuration
-- [ ] Set up cost tracking for cron jobs (via `llm-observer` hook)
+- [ ] Set up cost tracking for cron jobs (prefer bundled `diagnostics-otel` via a local collector)
 - [ ] Review and optimize after one week of operation
 - [ ] Document your cron jobs in `config/` for reference
 

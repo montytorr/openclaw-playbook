@@ -124,7 +124,7 @@ The publish step:
 |-----------|--------|-----|
 | Security hooks (the-wall, agent-firewall) | ✅ Yes | Consistent security baseline across all clones |
 | Automation hooks (auto-git-commit) | ✅ Yes | Same operational patterns everywhere |
-| Observability hooks (llm-observer) | ✅ Yes | Unified cost tracking |
+| Observability baseline (`diagnostics-otel` + collector wiring) | ✅ Yes | Unified telemetry and cost tracking |
 | SOUL.md, IDENTITY.md | ❌ No | Each clone has its own personality |
 | AGENTS.md | ⚠️ Partial | Share the framework, customize per-clone sections |
 | config/autonomy-tiers.json | ⚠️ Partial | Base tiers shared, clone-specific additions |

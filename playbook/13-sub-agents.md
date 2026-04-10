@@ -244,7 +244,7 @@ Each sub-agent is a separate API session. That means:
 - Use cheaper models for routine sub-agent work (via model override)
 - Batch related small tasks into one sub-agent instead of spawning five
 - Set appropriate timeouts to prevent runaway sessions
-- Monitor sub-agent costs via the `llm-observer` hook
+- Monitor sub-agent costs via bundled `diagnostics-otel` telemetry routed through your local collector/dashboard
 - Default sub-agent thinking to `off`, then escalate only when the task is genuinely synthesis-heavy or keeps failing for non-mechanical reasons
 
 A good rule of thumb: if the sub-agent's context load (bootstrap + task) costs more than doing the work yourself, just do it yourself.

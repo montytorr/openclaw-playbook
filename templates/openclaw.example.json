@@ -90,12 +90,6 @@
       "enabled": true
     },
     {
-      "name": "llm-observer",
-      "path": "hooks/llm-observer/index.ts",
-      "events": ["after_llm_call"],
-      "enabled": true
-    },
-    {
       "name": "message-logger",
       "path": "hooks/message-logger/index.ts",
       "events": ["message_sent", "message_received"],
@@ -199,7 +193,8 @@
       "discord",
       "browser",
       "openai",
-      "quota-aware-codex-router"
+      "quota-aware-codex-router",
+      "diagnostics-otel"
     ],
     "entries": {
       "device-pair": {
@@ -211,6 +206,12 @@
       "quota-aware-codex-router": {
         "enabled": true,
         "config": {}
+      },
+      "diagnostics-otel": {
+        "enabled": true,
+        "config": {
+          "otlpHttpEndpoint": "http://127.0.0.1:4318/v1"
+        }
       }
     }
   },

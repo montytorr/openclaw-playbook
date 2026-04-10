@@ -21,6 +21,11 @@ A dashboard gives you:
 - **Trading visibility** — positions, P&L, trade history (if applicable)
 - **Security overview** — audit logs, integrity status, hook activity
 
+For telemetry, prefer this path:
+`OpenClaw diagnostics-otel -> local OTEL collector -> Prometheus scrape -> dashboard API/UI`
+
+That is more reliable than teaching readers to depend on a custom `llm-observer` JSONL hook.
+
 ## Architecture
 
 ```
@@ -48,8 +53,8 @@ A dashboard gives you:
                    │ File reads
 ┌──────────────────┴──────────────────────┐
 │           Agent Workspace                │
-│  ├── data/agent.db (tasks, metrics)       │
-│  ├── logs/llm-observer.jsonl (costs)     │
+│  ├── data/agent.db (tasks, metrics)      │
+│  ├── OTLP → local collector → Prometheus │
 │  ├── logs/the-wall.jsonl (audit)         │
 │  └── canvas/security-overview.html       │
 └──────────────────────────────────────────┘
@@ -94,11 +99,12 @@ Displays:
 This is the most-used tab. It directly reflects Rule Zero compliance.
 
 ### System Tab
-**Data sources:** `llm-observer` JSONL logs, system metrics
+**Data sources:** OpenClaw `diagnostics-otel` via local OTEL collector, plus system metrics
 
 Displays:
 - Daily/weekly/monthly LLM cost breakdown by model
 - Token usage trends
+- Queue depth / run duration / throughput metrics when available
 - System health (CPU, RAM, disk — collected via cron)
 - Docker container status
 - Cron job execution history

@@ -269,19 +269,30 @@ Creates tasks automatically when detected. This is the safety net for Rule Zero 
 
 Saves canvas states (HTML, images) to the `canvas/` directory automatically. Prevents loss of visual work.
 
-## Observability Hooks
+## Observability
 
-### `llm-observer` — Token & Cost Tracking
+### Prefer bundled `diagnostics-otel` over a custom `llm-observer` hook
 
-**Trigger:** After LLM API calls.
+If you're on modern OpenClaw, the production-safe path is the bundled `diagnostics-otel` plugin plus a local OTEL collector.
+
+Why:
+- LLM telemetry hooks like `llm_input` and `llm_output` are plugin hook names, not normal workspace-hook events
+- a custom workspace `llm-observer` is easy to wire incorrectly and silently get no data
+- the bundled plugin is closer to the platform and exports real OTLP telemetry for metrics, logs, and traces
 
 Tracks:
-- Token usage per model (input, output, cache)
-- Cost per call and cumulative daily cost
-- Model distribution (which models are being used)
-- Session-level aggregation
+- token usage per model and channel
+- cost totals
+- run duration and queue metrics
+- context usage and message throughput
 
-Writes JSONL logs that feed into the dashboard's System tab.
+Recommended flow:
+- enable bundled `diagnostics-otel`
+- send OTLP to a local collector
+- have the dashboard read the collector's Prometheus endpoint
+- optionally persist lightweight snapshots for simple history if you do not run a full Prometheus backend
+
+`llm-observer` can still exist as a legacy/custom experiment, but it should not be presented as the default telemetry path.
 
 ### `message-logger` — Full Message Log
 
@@ -345,7 +356,7 @@ Start with these priorities:
 1. **`the-wall`** (credential scanning + tier classification) — this is your most important hook
 2. **`agent-firewall`** (session security injection) — second most important
 3. **`auto-git-commit`** (automatic version control) — prevents work loss
-4. **`llm-observer`** (cost tracking) — know what you're spending
+4. **`diagnostics-otel`** (bundled telemetry plugin) — know what you're spending and how the system behaves
 
 Add more hooks as your needs evolve. Each hook should do one thing well.
 
@@ -362,7 +373,7 @@ Add more hooks as your needs evolve. Each hook should do one thing well.
 - [ ] Build `the-wall` — credential scanning + autonomy tiers + audit logging
 - [ ] Build `agent-firewall` — security constraint injection at session start
 - [ ] Build `auto-git-commit` — automatic version control with debouncing
-- [ ] Build `llm-observer` — token and cost tracking
+- [ ] Enable bundled `diagnostics-otel` and point it at a local OTEL collector
 - [ ] Create `config/autonomy-tiers.json` — define your tier classifications
 - [ ] Set up audit log rotation for `logs/the-wall.jsonl`
 - [ ] Register hooks in `openclaw.json`

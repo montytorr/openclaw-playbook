@@ -131,11 +131,17 @@ A solid Codex setup looks like this:
     }
   },
   "plugins": {
-    "allow": ["discord", "browser", "openai", "quota-aware-codex-router"],
+    "allow": ["discord", "browser", "openai", "quota-aware-codex-router", "diagnostics-otel"],
     "entries": {
       "quota-aware-codex-router": {
         "enabled": true,
         "config": {}
+      },
+      "diagnostics-otel": {
+        "enabled": true,
+        "config": {
+          "otlpHttpEndpoint": "http://127.0.0.1:4318/v1"
+        }
       }
     }
   }
@@ -245,18 +251,23 @@ Each channel type (Discord, Telegram, Slack) has its own configuration block. Ke
       "path": "hooks/auto-git-commit/index.ts",
       "events": ["after_tool_call"],
       "enabled": true
-    },
-    {
-      "name": "llm-observer",
-      "path": "hooks/llm-observer/index.ts",
-      "events": ["after_llm_call"],
-      "enabled": true
     }
-  ]
+  ],
+  "plugins": {
+    "allow": ["discord", "browser", "openai", "diagnostics-otel"],
+    "entries": {
+      "diagnostics-otel": {
+        "enabled": true,
+        "config": {
+          "otlpHttpEndpoint": "http://127.0.0.1:4318/v1"
+        }
+      }
+    }
+  }
 }
 ```
 
-Hook paths are relative to the workspace. Register hooks in priority order — security hooks first.
+Hook paths are relative to the workspace. Register hooks in priority order, security hooks first. For LLM telemetry, prefer the bundled `diagnostics-otel` plugin over a workspace `llm-observer` hook.
 
 ### Cron Configuration
 
@@ -353,7 +364,7 @@ TTS (text-to-speech) lets your agent respond with voice messages. The `auto: "in
 }
 ```
 
-Plugins extend OpenClaw's capabilities. The `device-pair` plugin enables companion device connections (see Chapter 11).
+Plugins extend OpenClaw's capabilities. The `device-pair` plugin enables companion device connections (see Chapter 11). For telemetry, enable the bundled `diagnostics-otel` plugin and send OTLP to a local collector instead of relying on a custom workspace `llm-observer` hook.
 
 ## Environment Variables
 
