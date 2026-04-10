@@ -247,7 +247,7 @@ Don't have a cron job AND a heartbeat checking the same thing. Pick one mechanis
 
 | Strategy | Savings |
 |----------|---------|
-| Use `spark` for routine crons when live-routable | 50-80% per job |
+| Use `spark` for routine crons only when positively live-routable | 50-80% per job |
 | Reserve `gpt-5.4` for analysis/review jobs | Higher quality where it matters |
 | Set `thinking: "low"` for reactor/maintenance jobs | Less reasoning burn |
 | Set `thinking: "disabled"` for mechanical loops | Avoid wasted thought tokens |
@@ -262,11 +262,13 @@ If you're running OpenClaw on Codex after provider migration, a sane default spl
 
 - **Main agent:** `openai-codex/gpt-5.4` + `thinking=medium`
 - **Sub-agents by default:** inherited model, but `thinking=off`
-- **High-frequency cron checks / reactors:** `spark` if live-routable, else `openai-codex/gpt-5.3-codex`, with `thinking=low`
-- **Mechanical watchdogs / stop-loss loops:** `spark` if live-routable, else `gpt-5.3-codex`, with `thinking=disabled`
+- **High-frequency cron checks / reactors:** `spark` only if positively live-routable, else `openai-codex/gpt-5.3-codex`, with `thinking=low`
+- **Mechanical watchdogs / stop-loss loops:** `spark` only if positively live-routable, else `gpt-5.3-codex`, with `thinking=disabled`
 - **Nightly/weekly analysis jobs:** `gpt-5.4` + `thinking=medium`
 
 Escalate reasoning only when the work is actually ambiguous, multi-step, or synthesis-heavy.
+
+Here, positively live-routable means more than "the model slug exists somewhere." It means provider-wide usage is acceptable and a strong account-scoped signal says the account can actually serve Spark. If that proof is missing, route to `gpt-5.3-codex`.
 
 A good trigger list for increasing thinking:
 - the job keeps failing for non-mechanical reasons

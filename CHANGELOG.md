@@ -14,6 +14,8 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 ### Changed
 - README now points contributors at changelog upkeep as part of normal release hygiene.
 - Release hygiene guidance now documents lightweight semver-style bumps for the repo.
+- Clarified that Spark should only be treated as routable when a strong account-scoped signal proves it is actually usable, not merely because it appears in a model list.
+- Tightened Codex cron/config guidance so unknown Spark availability falls back to `gpt-5.3-codex`.
 
 ## [2026-04-10]
 

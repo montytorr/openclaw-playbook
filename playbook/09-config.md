@@ -163,6 +163,13 @@ If you use OpenClaw native memory, do **not** keep stale legacy memory aliases i
 
 If you keep Spark in the catalog, treat it as a **conditionally available fast lane**, not a guaranteed fallback.
 
+In this chapter, "routable" means all of the following are true:
+- the alias exists in the model catalog
+- provider-wide usage is still within your local thresholds
+- a strong account-scoped signal says Spark is actually usable right now
+
+A weak signal, such as generic model-list presence, is not enough.
+
 The production-safe pattern is:
 - keep `gpt-5.4` as primary
 - keep `gpt-5.3-codex` as the real fallback
@@ -175,7 +182,7 @@ Why? Because Spark availability can drift independently of the stable Codex path
 A practical router policy looks like:
 - high complexity -> `gpt-5.4`
 - medium complexity -> `gpt-5.3-codex`
-- low complexity -> `spark` only if current state says it is usable
+- low complexity -> `spark` only if current state says it is usable via a strong account-scoped signal
 - otherwise low complexity -> `gpt-5.3-codex`
 
 This is also the cleanest place to express real-time quota policy, because OpenClaw's built-in status surfaces provider/account usage well, but not every model-specific edge case.
@@ -187,8 +194,8 @@ This ended up being the useful split in production:
 | Workload | Model | Thinking |
 |---|---|---|
 | Main conversations | `gpt-5.4` | `medium` |
-| High-frequency cron/reactor checks | `spark` if live-routable, else `gpt-5.3-codex` | `low` |
-| Mechanical watchdog loops | `spark` if live-routable, else `gpt-5.3-codex` | `disabled` / `off` |
+| High-frequency cron/reactor checks | `spark` only if positively live-routable, else `gpt-5.3-codex` | `low` |
+| Mechanical watchdog loops | `spark` only if positively live-routable, else `gpt-5.3-codex` | `disabled` / `off` |
 | Nightly reviews, retros, strategy | `gpt-5.4` | `medium` |
 | Sub-agents by default | inherited / override | `off` |
 

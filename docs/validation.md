@@ -112,12 +112,13 @@ Expected:
 
 Check your config / cron definitions:
 - heavy review jobs → `gpt-5.4` + `medium`
-- routine checks → `spark` if live-routable, else `gpt-5.3-codex`, with `low`
-- mechanical loops → `spark` if live-routable, else `gpt-5.3-codex`, with `disabled`
+- routine checks → `spark` only if positively live-routable, else `gpt-5.3-codex`, with `low`
+- mechanical loops → `spark` only if positively live-routable, else `gpt-5.3-codex`, with `disabled`
 
 Expected:
 - no accidental expensive model on high-frequency jobs
 - no stale old-provider model strings in active config
+- no use of Spark based only on weak signals like generic model-list presence
 
 ## 7. Sub-agent verification loop exists
 
