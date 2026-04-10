@@ -8,9 +8,12 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 
 ### Added
 - `CHANGELOG.md` to track project history in a lightweight, human-maintained format.
+- Root `VERSION` file for simple repo versioning.
+- CI release-hygiene check that requires `VERSION` and `CHANGELOG.md` updates when meaningful project files change.
 
 ### Changed
 - README now points contributors at changelog upkeep as part of normal release hygiene.
+- Release hygiene guidance now documents lightweight semver-style bumps for the repo.
 
 ## [2026-04-10]
 

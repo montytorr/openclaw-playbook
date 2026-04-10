@@ -71,6 +71,7 @@ openclaw-playbook/
 ├── README.md              ← You are here
 ├── LICENSE                ← MIT
 ├── CHANGELOG.md           ← Human-written project history
+├── VERSION                ← Current project version
 ├── setup.sh               ← Workspace scaffolding (interactive by default, automation-friendly flags available)
 ├── playbook/              ← The main documentation (read in order)
 │   ├── 00-brownfield-adoption.md ← Adopting the playbook into active environments
@@ -221,9 +222,21 @@ For brownfield adoption, the practical rule is simple: runtime truth beats manif
 
 ## Release Hygiene
 
-When making meaningful changes, update `CHANGELOG.md` in the same PR or commit.
+This repo is versioned with a simple root `VERSION` file.
 
-Keep entries short, concrete, and operator-facing:
+Current versioning rule:
+- bump `VERSION` when meaningful project content changes
+- update `CHANGELOG.md` in the same PR or commit
+- keep changelog entries short, concrete, and operator-facing
+
+CI now checks this for meaningful changes across `README.md`, `setup.sh`, `playbook/`, `docs/`, `reference/`, `templates/`, and `schemas/`.
+
+Use lightweight semver-style bumps:
+- patch: wording, fixes, cleanup, verifier improvements
+- minor: new chapters, new reference scripts, notable new guidance
+- major: structural or compatibility-breaking repo changes
+
+Keep entries focused on:
 - what changed
 - why it matters
 - whether it affects rollout, safety, verification, or runtime behavior

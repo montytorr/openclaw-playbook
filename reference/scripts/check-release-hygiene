@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Lightweight release hygiene check for the playbook repo.
+
+Rules:
+- If meaningful project files changed, the diff must also include VERSION and CHANGELOG.md.
+- Docs-only housekeeping for the changelog/version files themselves is exempt.
+
+This is intentionally simple and human-friendly, not a full release system.
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+
+EXEMPT = {
+    "CHANGELOG.md",
+    "VERSION",
+    ".github/workflows/verify.yml",
+}
+
+WATCH_PREFIXES = (
+    "playbook/",
+    "docs/",
+    "reference/",
+    "templates/",
+    "schemas/",
+)
+
+WATCH_FILES = {
+    "README.md",
+    "setup.sh",
+}
+
+
+def run_git(args: list[str]) -> str:
+    return subprocess.check_output(["git", *args], cwd=REPO, text=True).strip()
+
+
+def changed_files(base: str, head: str) -> list[str]:
+    out = run_git(["diff", "--name-only", f"{base}...{head}"])
+    return [line.strip() for line in out.splitlines() if line.strip()]
+
+
+def is_meaningful(path: str) -> bool:
+    if path in EXEMPT:
+        return False
+    if path in WATCH_FILES:
+        return True
+    return path.startswith(WATCH_PREFIXES)
+
+
+def main() -> int:
+    base = os.environ.get("BASE_REF")
+    head = os.environ.get("HEAD_REF") or "HEAD"
+
+    if not base:
+        print("BASE_REF is required", file=sys.stderr)
+        return 2
+
+    files = changed_files(base, head)
+    meaningful = [p for p in files if is_meaningful(p)]
+
+    if not meaningful:
+        print("release hygiene: ok (no meaningful files changed)")
+        return 0
+
+    missing = []
+    if "VERSION" not in files:
+        missing.append("VERSION")
+    if "CHANGELOG.md" not in files:
+        missing.append("CHANGELOG.md")
+
+    if missing:
+        print("release hygiene: failed")
+        print("Meaningful changes detected in:")
+        for path in meaningful:
+            print(f"- {path}")
+        print("Required companion updates missing:")
+        for path in missing:
+            print(f"- {path}")
+        print("\nExpected workflow:")
+        print("- bump VERSION")
+        print("- add a short operator-facing CHANGELOG.md entry")
+        return 1
+
+    print("release hygiene: ok")
+    print("Meaningful changes included VERSION and CHANGELOG.md updates.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

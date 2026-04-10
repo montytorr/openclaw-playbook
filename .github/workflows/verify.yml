@@ -21,7 +21,21 @@ jobs:
         run: bash -n setup.sh
 
       - name: Compile reference Python scripts
-        run: python3 -m py_compile reference/scripts/task reference/scripts/mem-extract reference/scripts/mem-search reference/scripts/integrity-check reference/scripts/verify-memory-readiness reference/scripts/verify reference/scripts/verify-brownfield reference/scripts/verify-local reference/adapters/task-wrapper.example.py
+        run: python3 -m py_compile reference/scripts/task reference/scripts/mem-extract reference/scripts/mem-search reference/scripts/integrity-check reference/scripts/verify-memory-readiness reference/scripts/verify reference/scripts/verify-brownfield reference/scripts/verify-local reference/scripts/check-release-hygiene reference/adapters/task-wrapper.example.py
+
+      - name: Check release hygiene (pull requests)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.sha }}
+        run: python3 reference/scripts/check-release-hygiene
+
+      - name: Check release hygiene (pushes)
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        env:
+          BASE_REF: ${{ github.event.before }}
+          HEAD_REF: ${{ github.sha }}
+        run: python3 reference/scripts/check-release-hygiene
 
       - name: Run reference verification
         run: |
