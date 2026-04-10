@@ -70,6 +70,7 @@ chmod +x setup.sh
 openclaw-playbook/
 ├── README.md              ← You are here
 ├── LICENSE                ← MIT
+├── CHANGELOG.md           ← Human-written project history
 ├── setup.sh               ← Workspace scaffolding (interactive by default, automation-friendly flags available)
 ├── playbook/              ← The main documentation (read in order)
 │   ├── 00-brownfield-adoption.md ← Adopting the playbook into active environments
@@ -217,6 +218,15 @@ CI runs the same starter checks on every push and pull request via `.github/work
 - `reference/scripts/verify-brownfield`
 
 For brownfield adoption, the practical rule is simple: runtime truth beats manifest assumptions. Use the bundled docs and references to verify what your live system actually does before you bless any migration as complete.
+
+## Release Hygiene
+
+When making meaningful changes, update `CHANGELOG.md` in the same PR or commit.
+
+Keep entries short, concrete, and operator-facing:
+- what changed
+- why it matters
+- whether it affects rollout, safety, verification, or runtime behavior
 
 ## Contributing
 
