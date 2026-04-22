@@ -41,7 +41,7 @@ Skills define *how* tools work. This file is for *your* specifics — the stuff 
 <!-- Example:
 - `scripts/task` — Task management CLI
 - `scripts/status-report` — System health summary
-- `scripts/codex-health` — Embedded Codex runtime/auth health
+- `scripts/runtime-health` — Active runtime/auth health
 - `scripts/openclaw-update-safe` — Safe update wrapper that reapplies local runtime fixes
 - `scripts/integrity-check` — File integrity monitoring
 - `scripts/mem-search` — Observation database search

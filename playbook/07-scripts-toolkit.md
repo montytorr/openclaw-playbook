@@ -41,7 +41,7 @@ status-report --section system
 - **Gateway:** OpenClaw gateway process status, uptime
 - **Cron:** recent cron job execution status, failures
 - **Network:** key service reachability (ping your critical endpoints)
-- **Runtime:** active model/harness path, auth-health summary, and any known high-signal runtime drift flags
+- **Runtime:** active model/runtime path, auth-health summary, and any known high-signal runtime drift flags
 
 **Output format (text):**
 ```
@@ -54,28 +54,28 @@ Uptime: 14d 6h | Load: 0.42 0.38 0.31
    dashboard: up 3d | gateway: up 14d | traefik: up 14d
 
 ⚙️ Gateway: running (pid 1234) | uptime: 14d
-🤖 Codex: harness codex / fallback none | profiles ok | bridge ok
+🤖 Runtime: direct OpenClaw path | profiles ok | runtime state ok
 🕐 Cron: 8 jobs | last failure: none in 24h
 🌐 Network: all endpoints reachable
 ```
 
-If your environment uses an embedded Codex harness path, `status-report` should surface that reality. Otherwise the command is telling you the server is healthy while the actual agent runtime is quietly on fire.
+If your environment has a non-default runtime path or other runtime-sensitive auth state, `status-report` should surface that reality. Otherwise the command is telling you the server is healthy while the actual agent runtime is quietly on fire.
 
-### `openclaw-codex-health`-style Checks
+### `openclaw-runtime-health`-style Checks
 
-**Purpose:** Focused verification for the Codex runtime path when the generic system summary is not enough.
+**Purpose:** Focused verification for the active runtime path when the generic system summary is not enough.
 
-This does not need to be named `openclaw-codex-health`, but the pattern is worth copying.
+This does not need to be named `openclaw-runtime-health`, but the pattern is worth copying.
 
 Typical checks:
-- active embedded harness runtime/fallback
-- Codex auth profile completeness
-- embedded bridge/home token completeness
-- count of ambiguous or stale embedded harness lanes
+- active runtime mode/path and fallback policy
+- provider auth profile completeness
+- any provider-specific bridge/home token completeness, if your setup depends on it
+- count of ambiguous or stale pinned session lanes
 - human-readable one-line status for `/status` or local triage
 
 Why it exists:
-- model routing can look correct while the embedded bridge is broken
+- model routing can look correct while the real runtime path is broken
 - restart/update drift can quietly undo your intended runtime
 - approval spam and auth failures often come from runtime state, not from the part of config you were staring at
 

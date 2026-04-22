@@ -11,7 +11,7 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 - Root `VERSION` file for simple repo versioning.
 - CI release-hygiene check that requires `VERSION` and `CHANGELOG.md` updates when meaningful project files change.
 - Explicit Codex plugin/app-server approval-policy example in the config template.
-- Stronger validation guidance for Codex harness/runtime health and post-update verification.
+- Stronger validation guidance for Codex runtime health and post-update verification.
 
 ### Changed
 - README now points contributors at changelog upkeep as part of normal release hygiene.
@@ -19,7 +19,7 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 - Clarified that Spark should only be treated as routable when a strong account-scoped signal proves it is actually usable, not merely because it appears in a model list.
 - Tightened Codex cron/config guidance so unknown Spark availability falls back to `gpt-5.3-codex`.
 - Expanded configuration and script guidance so Codex runtime health, auth-bridge drift, and approval-policy intent are documented as operational concerns rather than implied implementation details.
-- Expanded the local rollout case study with runtime-drift lessons from a real Codex harness hardening pass.
+- Expanded the local rollout case study with runtime-drift lessons from a real Codex runtime hardening pass.
 - Added explicit update-wrapper guidance in the scripts toolkit so hosts with local OpenClaw patches document one canonical post-update recovery path instead of relying on tribal knowledge.
 
 ## [2026-04-10]

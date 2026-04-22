@@ -167,15 +167,15 @@ Expected:
 - generic verify passes
 - brownfield verify passes
 
-## 11. Codex harness validation
+## 11. Codex runtime validation
 
 If you are running a Codex-first setup, stop treating model config as sufficient proof.
 
 Check that your local status/health tooling can answer all of these:
-- which harness/runtime path is actually active
+- which runtime path is actually active
 - which fallback path is actually active
 - whether the Codex auth profile is complete
-- whether the embedded Codex bridge/home is healthy
+- whether any provider-specific runtime state is healthy
 - whether the intended app-server approval policy is actually present
 
 Practical examples:
@@ -186,7 +186,7 @@ status-report --json
 grep -n "approvalPolicy" ~/.openclaw/openclaw.json
 ```
 
-If you maintain a dedicated Codex runtime health script, run that too.
+If you maintain a dedicated runtime health script, run that too.
 
 Expected:
 - the reported runtime path matches the path you think is live

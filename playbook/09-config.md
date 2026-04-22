@@ -158,9 +158,9 @@ A solid Codex setup looks like this:
 
 If you use OpenClaw native memory, do **not** keep stale legacy memory aliases in `plugins.allow` just to make old docs happy. Prefer the native memory stack and, if needed, bind the memory slot to `memory-core` instead of carrying a dead plugin name forever.
 
-### Codex Plugin And Embedded Harness Operations
+### Codex Plugin And Runtime Operations
 
-If you are running a Codex-first setup, document the Codex plugin path explicitly instead of treating it like an invisible implementation detail.
+If you are running a Codex-first setup, document the actual runtime path explicitly instead of treating it like an invisible implementation detail.
 
 The practical baseline is:
 
@@ -184,7 +184,7 @@ The practical baseline is:
 Why this matters:
 - the app-server path is part of the real runtime, not just a hidden helper
 - approval behavior should be intentional, not whatever the current default happens to be
-- Codex auth/runtime failures often show up through the embedded harness path before they become obvious elsewhere
+- Codex auth/runtime failures often show up through runtime-state drift before they become obvious elsewhere
 
 This does **not** mean "disable human approval for every risky action." It means the internal Codex app-server command lane should not keep interrupting normal operation with approval prompts when your intended policy is autonomous internal execution.
 
@@ -194,7 +194,7 @@ Operationally, treat these as separate things:
 - embedded Codex bridge/home health
 - stale pinned session state
 
-Changing only the model catalog is not enough if the embedded runtime path is unhealthy or stale sessions keep dragging old state around.
+Changing only the model catalog is not enough if the runtime path is unhealthy or stale sessions keep dragging old state around.
 
 **Model strategy:**
 - `gpt-5.4` (`codex`) for the main agent and heavier reasoning work
@@ -252,16 +252,16 @@ The principle is simple: **don't spend reasoning where there is no reasoning to 
 For a live Codex deployment, verify runtime truth, not config aesthetics.
 
 At minimum, your local operational checks should tell you:
-- which embedded harness runtime/fallback is active
+- which runtime mode/path and fallback policy are active
 - whether the Codex auth profile is complete
-- whether the embedded bridge/home is healthy
-- whether any ambiguous or stale embedded lanes still exist
+- whether any provider-specific bridge/home state is healthy, if applicable
+- whether any ambiguous or stale pinned session lanes still exist
 
-The exact script names are up to you, but the pattern matters. A `status-report` that only covers CPU, Docker, and network health is incomplete if your real failure mode lives in the Codex bridge or embedded harness path.
+The exact script names are up to you, but the pattern matters. A `status-report` that only covers CPU, Docker, and network health is incomplete if your real failure mode lives in the Codex bridge or runtime path.
 
 Useful checks usually include:
 - `status-report`
-- a focused Codex-harness health script
+- a focused runtime health script
 - direct config inspection for the intended app-server policy
 
 ### Failure Classes To Expect
@@ -269,7 +269,7 @@ Useful checks usually include:
 The annoying but real production failure classes are:
 - **config drift** — the intended policy or routing changed silently
 - **stale pinned sessions** — old session state keeps surfacing dead provider or approval behavior
-- **auth-bridge drift** — embedded Codex token state becomes incomplete or stale
+- **auth/runtime drift** — provider token or runtime state becomes incomplete or stale
 
 The pattern to document is not "we changed one config key and everything was fine." The pattern is "we verified the actual runtime path after restart/update and treated runtime evidence as the source of truth."
 
