@@ -79,6 +79,29 @@ Why it exists:
 - restart/update drift can quietly undo your intended runtime
 - approval spam and auth failures often come from runtime state, not from the part of config you were staring at
 
+### `openclaw-update-safe`-style Update Wrappers
+
+**Purpose:** Make package updates reproducible when your live host depends on local patches, config enforcement, or post-update validation.
+
+This does not need to be named `openclaw-update-safe`, but if your production lane requires more than `npm install -g openclaw@...`, document that wrapper as the canonical path and treat the raw package install as incomplete.
+
+Typical responsibilities:
+- back up the live config before touching the install
+- update or reinstall the OpenClaw package
+- re-apply any local installed-bundle patches that upstream updates can overwrite
+- re-apply host-side config or helper-script patches
+- re-sync any embedded auth/runtime state that the update can invalidate
+- run focused health checks plus a general doctor/validation pass before declaring success
+
+Why it exists:
+- updates can silently remove local fixes that were keeping the runtime stable
+- runtime/auth drift often shows up only after restart, not at install time
+- operators need one obvious command for updates instead of tribal knowledge plus six follow-up commands
+
+Operator rule:
+- if your host needs an update wrapper, put it in `scripts/`, document exactly what it reapplies, and point every runbook and local `TOOLS.md` note at that wrapper
+- if upstream later absorbs the local fixes, simplify the wrapper or retire it; do not keep zombie patch steps around forever
+
 ### `integrity-check` — File Integrity Monitoring
 
 **Purpose:** Detect unexpected changes to critical files.
