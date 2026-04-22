@@ -41,6 +41,8 @@ Skills define *how* tools work. This file is for *your* specifics — the stuff 
 <!-- Example:
 - `scripts/task` — Task management CLI
 - `scripts/status-report` — System health summary
+- `scripts/codex-health` — Embedded Codex runtime/auth health
+- `scripts/openclaw-update-safe` — Safe update wrapper that reapplies local runtime fixes
 - `scripts/integrity-check` — File integrity monitoring
 - `scripts/mem-search` — Observation database search
 -->
@@ -52,6 +54,12 @@ Skills define *how* tools work. This file is for *your* specifics — the stuff 
 ### Monitoring
 - BetterStack heartbeats configured in `config/betterstack-heartbeats.json`
 - Ping helper: `scripts/betterstack-ping <name>`
+
+### Runtime Health
+- If you maintain a Codex-first setup, document how to check:
+  - active runtime/fallback
+  - bridge/auth health
+  - post-update verification path
 
 ### CI/CD
 - GitHub Actions self-hosted runner at `/home/runner/actions-runner`

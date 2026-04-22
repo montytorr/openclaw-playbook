@@ -193,10 +193,19 @@
       "discord",
       "browser",
       "openai",
+      "codex",
       "quota-aware-codex-router",
       "diagnostics-otel"
     ],
     "entries": {
+      "codex": {
+        "enabled": true,
+        "config": {
+          "appServer": {
+            "approvalPolicy": "never"
+          }
+        }
+      },
       "device-pair": {
         "enabled": true,
         "config": {

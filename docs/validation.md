@@ -167,6 +167,46 @@ Expected:
 - generic verify passes
 - brownfield verify passes
 
+## 11. Codex harness validation
+
+If you are running a Codex-first setup, stop treating model config as sufficient proof.
+
+Check that your local status/health tooling can answer all of these:
+- which harness/runtime path is actually active
+- which fallback path is actually active
+- whether the Codex auth profile is complete
+- whether the embedded Codex bridge/home is healthy
+- whether the intended app-server approval policy is actually present
+
+Practical examples:
+
+```bash
+status-report
+status-report --json
+grep -n "approvalPolicy" ~/.openclaw/openclaw.json
+```
+
+If you maintain a dedicated Codex runtime health script, run that too.
+
+Expected:
+- the reported runtime path matches the path you think is live
+- approval policy matches your documented intent
+- bridge/auth state is healthy enough that restarts will not immediately regress
+
+## 12. Post-update runtime verification
+
+Package updates are not the finish line. For live systems, they are a drift risk.
+
+After an OpenClaw update or local runtime patch cycle, verify:
+- the intended runtime/fallback still holds
+- local bundle/runtime fixes were reapplied if your environment depends on them
+- the embedded bridge/home still has complete token data
+- your status/health surface still reports the Codex path correctly
+
+Expected:
+- no silent regression from "works in config" to "broken at runtime"
+- no approval or auth surprises caused by overwritten runtime state
+
 ## CI
 
 GitHub Actions workflow: `.github/workflows/verify.yml`
@@ -209,5 +249,6 @@ You are ready to build on the playbook when:
 - heartbeat works
 - one hook can block unsafe actions
 - cron models/thinking are intentional
+- Codex runtime health is verifiable, not assumed from config alone
 - sub-agent output is verified, not trusted
 - brownfield assumptions are checked with repeatable scripts, not conversational confidence

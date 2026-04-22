@@ -53,6 +53,24 @@ For observability and runtime behavior, the operator had to validate:
 
 That changed the documentation stance from "the manifest says this should work" to "the runtime proves this works."
 
+## When Runtime Drift Gets Personal
+
+One of the sharper Codex-era lessons was that a live system can fail in ways the config file does not confess.
+
+The rollout had to deal with failure classes like:
+- the intended runtime path being different from the runtime path actually in use
+- stale pinned sessions preserving old behavior after config was corrected
+- embedded auth-bridge state becoming incomplete even though the top-level auth story looked fine
+- approval prompts or auth errors coming from old app-server threads rather than current policy
+
+That forced a stricter operational standard:
+- verify the active runtime path, not just the configured one
+- verify bridge/auth completeness, not just provider selection
+- treat stale session state as part of the runtime surface
+- verify again after restart or update, because drift loves restarts
+
+This is exactly why the playbook leans so hard on runtime truth over manifest theory. Production failures rarely care which file looked convincing in a code review.
+
 ## Delegation Governance
 
 Sub-agent guidance also became more useful after governance was made explicit.
