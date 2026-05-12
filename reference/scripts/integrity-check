@@ -23,6 +23,7 @@ PROTECTED_FILES = [
     "IDENTITY.md",
     "USER.md",
     "HEARTBEAT.md",
+    "DREAMS.md",
     "TOOLS.md",
     "SECURITY.md",
 ]
@@ -48,7 +49,10 @@ def collect():
 def load_baseline():
     if not BASELINE_PATH.exists():
         return None
-    return json.loads(BASELINE_PATH.read_text())
+    try:
+        return json.loads(BASELINE_PATH.read_text())
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"invalid integrity baseline at {BASELINE_PATH}: {exc}")
 
 
 def cmd_init():

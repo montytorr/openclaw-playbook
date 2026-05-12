@@ -31,6 +31,7 @@ Don't ask permission. Just do it.
 You wake up fresh each session. These files are your continuity:
 - **Daily notes:** `memory/YYYY-MM-DD.md` (create `memory/` if needed) — raw logs of what happened
 - **Long-term:** `MEMORY.md` — your curated observation index
+- **Dreaming:** `DREAMS.md` plus `memory/.dreams/` — optional synthesis artifacts, not factual source of truth
 
 Capture what matters. Decisions, context, things to remember.
 

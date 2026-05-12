@@ -57,12 +57,12 @@ task update <id> done "What changed"
 
 ## Default Model Split (Codex-first)
 
-- Main agent: `gpt-5.4` + `thinking=medium`
-- Cron/reactors: `spark` only if positively routable, else `gpt-5.3-codex`, with `thinking=low`
-- Mechanical loops: `spark` only if positively routable, else `gpt-5.3-codex`, with `thinking=disabled`
+- Main agent: `gpt-5.5` + `thinking=medium`
+- Cron/reactors: `gpt-5.5-mini`, with `thinking=low`
+- Mechanical loops: `gpt-5.5-mini`, with `thinking=disabled`
 - Sub-agents: `thinking=off` unless reasoning is actually needed
 
-Routable means the alias exists, provider-level usage is acceptable, and a strong account-scoped signal says the model is actually usable. If that is unknown, assume Spark is **not** routable.
+If you add optional fast-lane models later, "routable" should mean the alias exists, provider-level usage is acceptable, and a strong account-scoped signal says the model is actually usable. If that proof is missing, keep routing on the stable `gpt-5.5`/`gpt-5.5-mini` pair.
 
 ## Brownfield First, If Applicable
 

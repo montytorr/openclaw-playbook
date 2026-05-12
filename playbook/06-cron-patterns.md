@@ -99,7 +99,7 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Generate a morning briefing: check calendar for today's events, scan email for anything urgent, check market pre-open for any positions that need attention. Deliver a concise summary.",
-    "model": "openai-codex/gpt-5.4",
+    "model": "openai-codex/gpt-5.5",
     "thinking": "medium",
     "timeoutSeconds": 600
   },
@@ -125,7 +125,7 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Run system health check: Docker containers, disk space, cron job status, recent error logs. Only report if something needs attention.",
-    "model": "openai-codex/gpt-5.3-codex-spark",
+    "model": "openai-codex/gpt-5.5-mini",
     "thinking": "low",
     "timeoutSeconds": 300
   },
@@ -150,7 +150,7 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Run integrity-check. If any files have unexpected changes, report immediately. Otherwise, stay silent.",
-    "model": "openai-codex/gpt-5.3-codex-spark",
+    "model": "openai-codex/gpt-5.5-mini",
     "thinking": "disabled",
     "timeoutSeconds": 300
   },
@@ -247,8 +247,8 @@ Don't have a cron job AND a heartbeat checking the same thing. Pick one mechanis
 
 | Strategy | Savings |
 |----------|---------|
-| Use `spark` for routine crons only when positively live-routable | 50-80% per job |
-| Reserve `gpt-5.4` for analysis/review jobs | Higher quality where it matters |
+| Use `gpt-5.5-mini` for routine crons/reactors | Lower cost where the task is mechanical |
+| Reserve `gpt-5.5` for analysis/review jobs | Higher quality where it matters |
 | Set `thinking: "low"` for reactor/maintenance jobs | Less reasoning burn |
 | Set `thinking: "disabled"` for mechanical loops | Avoid wasted thought tokens |
 | Batch checks into heartbeats | Fewer total sessions |
@@ -260,15 +260,15 @@ Don't have a cron job AND a heartbeat checking the same thing. Pick one mechanis
 
 If you're running OpenClaw on Codex after provider migration, a sane default split looks like this:
 
-- **Main agent:** `openai-codex/gpt-5.4` + `thinking=medium`
+- **Main agent:** `openai-codex/gpt-5.5` + `thinking=medium`
 - **Sub-agents by default:** inherited model, but `thinking=off`
-- **High-frequency cron checks / reactors:** `spark` only if positively live-routable, else `openai-codex/gpt-5.3-codex`, with `thinking=low`
-- **Mechanical watchdogs / stop-loss loops:** `spark` only if positively live-routable, else `gpt-5.3-codex`, with `thinking=disabled`
-- **Nightly/weekly analysis jobs:** `gpt-5.4` + `thinking=medium`
+- **High-frequency cron checks / reactors:** `openai-codex/gpt-5.5-mini`, with `thinking=low`
+- **Mechanical watchdogs / stop-loss loops:** `gpt-5.5-mini`, with `thinking=disabled`
+- **Nightly/weekly analysis jobs:** `gpt-5.5` + `thinking=medium`
 
 Escalate reasoning only when the work is actually ambiguous, multi-step, or synthesis-heavy.
 
-Here, positively live-routable means more than "the model slug exists somewhere." It means provider-wide usage is acceptable and a strong account-scoped signal says the account can actually serve Spark. If that proof is missing, route to `gpt-5.3-codex`.
+If you add optional fast-lane models later, positively live-routable should mean more than "the model slug exists somewhere." It should include a strong account-scoped signal and keep the optional lane out of the hard fallback chain.
 
 A good trigger list for increasing thinking:
 - the job keeps failing for non-mechanical reasons

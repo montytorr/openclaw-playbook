@@ -41,3 +41,4 @@ jobs:
         run: |
           reference/scripts/verify
           reference/scripts/verify-brownfield
+          reference/scripts/verify-local

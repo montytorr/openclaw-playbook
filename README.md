@@ -2,7 +2,7 @@
 
 An educational playbook for running an autonomous OpenClaw agent. Built from real operational patterns — battle-tested across months of 24/7 autonomous operation.
 
-**Current examples reflect a Codex-first production setup** with `gpt-5.4` as the primary model, `gpt-5.3-codex` as the stable fallback, and `spark` treated as a conditional fast lane rather than a blind default fallback. In this repo, "routable" means positively verified by a strong account-scoped signal, not merely present in a model list.
+**Current examples reflect a Codex-first OpenClaw 2026.5 production setup** with `gpt-5.5` as the primary model and `gpt-5.5-mini` as the stable fallback/routine-work lane. Optional fast lanes should be positively verified by a strong account-scoped signal before they are routed, and should not be placed in the hard fallback chain.
 
 ## Who This Is For
 
@@ -16,7 +16,7 @@ Experienced developers who:
 
 - **Workspace structure** — a proven directory layout for agent memory, projects, scripts, and security
 - **Identity templates** — ready-to-customize files that give your agent personality, memory, and behavioral guardrails
-- **System documentation** — detailed descriptions of every operational pattern: hooks, crons, task tracking, security gates, dashboards, webhook queues, A2A reactors, and more
+- **System documentation** — detailed descriptions of every operational pattern: hooks, crons, task tracking, security gates, dashboards, webhook queues, A2A reactors, TaskFlow orchestration, and more
 - **Memory architecture** — the hybrid markdown + SQLite observation model that gives the agent real continuity
 - **LLM wiki guidance** — how to turn your memory system into a browsable knowledge surface for both humans and agents
 - **Knowledge graph patterns** — a practical model for linking notes, tasks, docs, people, projects, contracts, and events
@@ -87,7 +87,7 @@ openclaw-playbook/
 │   ├── 10-clones.md       ← Multi-instance deployments
 │   ├── 11-nodes.md        ← Companion devices & browser profiles
 │   ├── 12-a2a-comms.md   ← Agent-to-agent communication
-│   ├── 13-sub-agents.md  ← Sub-agent orchestration & parallel work
+│   ├── 13-sub-agents.md  ← Sub-agent orchestration, TaskFlow & parallel work
 │   ├── 14-skills.md      ← Skills system & on-demand instructions
 │   ├── 15-context-management.md ← Context windows & compaction resilience
 │   └── 16-infrastructure.md  ← Traefik, Docker networking, Tailscale, DNS
@@ -97,6 +97,7 @@ openclaw-playbook/
 │   ├── IDENTITY.md        ← Agent identity card
 │   ├── USER.md            ← Human operator profile
 │   ├── HEARTBEAT.md       ← Heartbeat poll configuration
+│   ├── DREAMS.md          ← Optional dream diary / synthesis surface
 │   ├── TOOLS.md           ← Local tool & infrastructure notes
 │   ├── SECURITY.md        ← Security rules & protocols
 │   └── openclaw.example.json ← Configuration skeleton

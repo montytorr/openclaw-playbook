@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """Educational scaffold, not production hardened.
 
-Local rollout verifier for an already-active workspace.
+Local rollout verifier.
+
+If WORKSPACE_ROOT is set, verify that active workspace in place.
+If WORKSPACE_ROOT is not set, create a temporary setup workspace first so the
+example verifier is reproducible on clean machines and CI-like shells.
+
 Runs the smallest useful stack:
-- integrity baseline present and clean
+- integrity baseline present and clean (or initialized for the temp workspace)
 - memory pipeline is minimally ready
 - generic reference verifier still passes
 - brownfield verifier still passes
@@ -12,6 +17,7 @@ Runs the smallest useful stack:
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -23,11 +29,44 @@ def run(cmd, cwd=None, env=None):
     subprocess.run(cmd, cwd=cwd or REPO, env=env or ENV, check=True)
 
 
+def verify_stack(env):
+    integrity = REPO / "reference" / "scripts" / "integrity-check"
+    run([sys.executable, str(integrity), "check"], env=env)
+    run([sys.executable, str(REPO / "reference" / "scripts" / "verify-memory-readiness")], env=env)
+    run([sys.executable, str(REPO / "reference" / "scripts" / "verify")], env=env)
+    run([sys.executable, str(REPO / "reference" / "scripts" / "verify-brownfield")], env=env)
+
+
 def main():
-    run([sys.executable, str(REPO / "reference" / "scripts" / "integrity-check"), "check"])
-    run([sys.executable, str(REPO / "reference" / "scripts" / "verify-memory-readiness")])
-    run([sys.executable, str(REPO / "reference" / "scripts" / "verify")])
-    run([sys.executable, str(REPO / "reference" / "scripts" / "verify-brownfield")])
+    if "WORKSPACE_ROOT" in ENV:
+        verify_stack(ENV)
+        print("verify-local: ok")
+        return
+
+    with tempfile.TemporaryDirectory() as tmp:
+        env = dict(ENV)
+        env["WORKSPACE_ROOT"] = tmp
+        run([
+            "bash",
+            str(REPO / "setup.sh"),
+            "--workspace",
+            tmp,
+            "--non-interactive",
+            "--skip-commit",
+            "--git-name",
+            "Playbook Bot",
+            "--git-email",
+            "bot@example.com",
+        ], env=env)
+        memory_note = Path(tmp) / "memory" / "2026-04-10.md"
+        memory_note.write_text(
+            "# 2026-04-10\n\n"
+            "## 09:00 — Local rollout probe\n"
+            "- verify-local has a daily note to prove memory readiness.\n"
+        )
+        run([sys.executable, str(REPO / "reference" / "scripts" / "integrity-check"), "init"], env=env)
+        verify_stack(env)
+
     print("verify-local: ok")
 
 

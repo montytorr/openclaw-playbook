@@ -143,10 +143,18 @@ Skills that wrap external tools and APIs:
 
 ### Operational Skills
 Skills for ongoing operational tasks:
+- **TaskFlow** — durable multi-step orchestration with owner context, wait state, child-task linkage, and resume/cancel semantics
 - **Trading** — stock/crypto trading via broker APIs
 - **Monitoring** — uptime monitoring, health checks
 - **Security scanning** — secret detection, vulnerability scanning
 - **Cost tracking** — LLM usage and cost reporting
+
+### Workflow Pattern Skills
+Skills that describe a reusable orchestration pattern rather than one external tool:
+- **taskflow** — use when one durable job should survive waits, restarts, or multiple detached child tasks
+- **taskflow-inbox-triage** — concrete example pattern for classifying inbox items, waiting on replies, and summarizing later
+
+These should stay out of AGENTS.md. Load them only when the task actually matches; otherwise they become expensive standing instructions.
 
 ### Meta-Skills
 Skills about the skill system itself:

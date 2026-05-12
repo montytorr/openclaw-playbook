@@ -15,18 +15,17 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openai-codex/gpt-5.4",
+        "primary": "openai-codex/gpt-5.5",
         "fallbacks": [
-          "openai-codex/gpt-5.3-codex"
+          "openai-codex/gpt-5.5-mini"
         ]
       },
       "models": {
-        "openai-codex/gpt-5.4": {
+        "openai-codex/gpt-5.5": {
           "alias": "codex"
         },
-        "openai-codex/gpt-5.3-codex": {},
-        "openai-codex/gpt-5.3-codex-spark": {
-          "alias": "spark"
+        "openai-codex/gpt-5.5-mini": {
+          "alias": "mini"
         }
       },
       "workspace": "/root/clawd",
@@ -125,7 +124,7 @@
         "payload": {
           "kind": "agentTurn",
           "message": "Generate a morning briefing: check calendar, scan email for urgent items, summarize any overnight activity.",
-          "model": "openai-codex/gpt-5.4",
+          "model": "openai-codex/gpt-5.5",
           "thinking": "medium",
           "timeoutSeconds": 600
         },
@@ -147,7 +146,7 @@
         "payload": {
           "kind": "agentTurn",
           "message": "Run system health check. Only report if something needs attention.",
-          "model": "openai-codex/gpt-5.3-codex",
+          "model": "openai-codex/gpt-5.5-mini",
           "thinking": "low",
           "timeoutSeconds": 300
         },
@@ -157,8 +156,8 @@
         }
       },
       {
-        "id": "spark-availability-refresh",
-        "name": "Spark Availability Refresh",
+        "id": "routine-maintenance",
+        "name": "Routine Maintenance",
         "enabled": true,
         "schedule": {
           "kind": "every",
@@ -167,7 +166,9 @@
         "sessionTarget": "isolated",
         "payload": {
           "kind": "agentTurn",
-          "message": "Refresh quota/router state for Spark availability and stay silent on success.",
+          "message": "Run lightweight maintenance checks and stay silent on success.",
+          "model": "openai-codex/gpt-5.5-mini",
+          "thinking": "low",
           "timeoutSeconds": 180
         },
         "delivery": {

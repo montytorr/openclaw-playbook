@@ -16,11 +16,14 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 ### Changed
 - README now points contributors at changelog upkeep as part of normal release hygiene.
 - Release hygiene guidance now documents lightweight semver-style bumps for the repo.
-- Clarified that Spark should only be treated as routable when a strong account-scoped signal proves it is actually usable, not merely because it appears in a model list.
-- Tightened Codex cron/config guidance so unknown Spark availability falls back to `gpt-5.3-codex`.
+- Updated current Codex routing examples to the OpenClaw 2026.5 line: `gpt-5.5` primary with `gpt-5.5-mini` as fallback/routine-work lane.
+- Removed stale optional-fast-lane-as-current-example guidance; fast lanes are now documented only as verified, account-scoped additions outside the hard fallback chain.
 - Expanded configuration and script guidance so Codex runtime health, auth-bridge drift, and approval-policy intent are documented as operational concerns rather than implied implementation details.
 - Expanded the local rollout case study with runtime-drift lessons from a real Codex runtime hardening pass.
 - Added explicit update-wrapper guidance in the scripts toolkit so hosts with local OpenClaw patches document one canonical post-update recovery path instead of relying on tribal knowledge.
+- Added DREAMS.md / `memory/.dreams/` coverage for OpenClaw dreaming/synthesis surfaces.
+- Added TaskFlow guidance for durable multi-step orchestration and workflow-pattern skills.
+- Made `verify-local` reproducible on clean machines by bootstrapping a temporary workspace when `WORKSPACE_ROOT` is not supplied, and hardened integrity-baseline parsing.
 
 ## [2026-04-10]
 

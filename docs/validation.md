@@ -111,14 +111,14 @@ Expected:
 ## 6. Cron model split is intentional
 
 Check your config / cron definitions:
-- heavy review jobs → `gpt-5.4` + `medium`
-- routine checks → `spark` only if positively live-routable, else `gpt-5.3-codex`, with `low`
-- mechanical loops → `spark` only if positively live-routable, else `gpt-5.3-codex`, with `disabled`
+- heavy review jobs → `gpt-5.5` + `medium`
+- routine checks → `gpt-5.5-mini`, with `low`
+- mechanical loops → `gpt-5.5-mini`, with `disabled`
 
 Expected:
 - no accidental expensive model on high-frequency jobs
 - no stale old-provider model strings in active config
-- no use of Spark based only on weak signals like generic model-list presence
+- no optional fast-lane model in the hard fallback chain without account-scoped proof
 
 ## 7. Sub-agent verification loop exists
 

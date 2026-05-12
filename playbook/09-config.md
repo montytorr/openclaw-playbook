@@ -25,13 +25,12 @@ The main configuration file lives at `~/.openclaw/openclaw.json` (or wherever yo
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openai-codex/gpt-5.4",
-        "fallbacks": ["openai-codex/gpt-5.3-codex"]
+        "primary": "openai-codex/gpt-5.5",
+        "fallbacks": ["openai-codex/gpt-5.5-mini"]
       },
       "models": {
-        "openai-codex/gpt-5.4": { "alias": "codex" },
-        "openai-codex/gpt-5.3-codex": {},
-        "openai-codex/gpt-5.3-codex-spark": { "alias": "spark" }
+        "openai-codex/gpt-5.5": { "alias": "codex" },
+        "openai-codex/gpt-5.5-mini": { "alias": "mini" }
       },
       "workspace": "/root/clawd",
       "thinkingDefault": "medium",
@@ -113,13 +112,12 @@ A solid Codex setup looks like this:
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openai-codex/gpt-5.4",
-        "fallbacks": ["openai-codex/gpt-5.3-codex"]
+        "primary": "openai-codex/gpt-5.5",
+        "fallbacks": ["openai-codex/gpt-5.5-mini"]
       },
       "models": {
-        "openai-codex/gpt-5.4": { "alias": "codex" },
-        "openai-codex/gpt-5.3-codex": {},
-        "openai-codex/gpt-5.3-codex-spark": { "alias": "spark" }
+        "openai-codex/gpt-5.5": { "alias": "codex" },
+        "openai-codex/gpt-5.5-mini": { "alias": "mini" }
       },
       "thinkingDefault": "medium",
       "subagents": {
@@ -197,39 +195,31 @@ Operationally, treat these as separate things:
 Changing only the model catalog is not enough if the runtime path is unhealthy or stale sessions keep dragging old state around.
 
 **Model strategy:**
-- `gpt-5.4` (`codex`) for the main agent and heavier reasoning work
-- `gpt-5.3-codex` as the stable fallback
-- `gpt-5.3-codex-spark` (`spark`) stays available, but should be routed by policy, not used as a blind fallback
+- `gpt-5.5` (`codex`) for the main agent and heavier reasoning work
+- `gpt-5.5-mini` (`mini`) as the stable fallback and routine-work lane
 - main session default thinking: `medium`
 - sub-agent default thinking: `off` (escalate only when needed)
 - per-cron overrides based on workload, not habit
 - image generation model remains separate from chat model
 
-### Quota-Aware Spark Routing
+### Quota-Aware Mini Routing
 
-If you keep Spark in the catalog, treat it as a **conditionally available fast lane**, not a guaranteed fallback.
-
-In this chapter, "routable" means all of the following are true:
-- the alias exists in the model catalog
-- provider-wide usage is still within your local thresholds
-- a strong account-scoped signal says Spark is actually usable right now
-
-A weak signal, such as generic model-list presence, is not enough.
+As of the 2026.5 runtime line, keep the catalog boring: `gpt-5.5` primary, `gpt-5.5-mini` fallback. Do not keep stale optional fast-lane aliases in current examples unless your account has a separately verified lane and you actively route to it.
 
 The production-safe pattern is:
-- keep `gpt-5.4` as primary
-- keep `gpt-5.3-codex` as the real fallback
-- expose `spark` as an alias only
-- use a local routing plugin to decide when Spark is actually usable
-- refresh Spark availability from live usage and provider-visible model availability on a cron
+- keep `gpt-5.5` as primary
+- keep `gpt-5.5-mini` as the real fallback
+- use `gpt-5.5-mini` for routine crons/reactors and low-ambiguity maintenance
+- reserve `gpt-5.5` for main conversations, reviews, synthesis, and high-stakes work
+- verify routing with actual runtime status, not just model catalog strings
 
-Why? Because Spark availability can drift independently of the stable Codex path. A direct fallback chain like `gpt-5.4 -> spark` looks elegant until Spark is unavailable and your supposedly safe fallback becomes the thing that breaks.
+Why? Because fallback models should be dependable. Optional fast lanes are useful only after they are proven live for the account and kept out of the hard fallback chain.
 
 A practical router policy looks like:
-- high complexity -> `gpt-5.4`
-- medium complexity -> `gpt-5.3-codex`
-- low complexity -> `spark` only if current state says it is usable via a strong account-scoped signal
-- otherwise low complexity -> `gpt-5.3-codex`
+- high complexity -> `gpt-5.5`
+- medium complexity -> `gpt-5.5-mini` unless quality matters more than cost
+- low complexity -> `gpt-5.5-mini` with low/off thinking
+- unknown or high-stakes -> `gpt-5.5`
 
 This is also the cleanest place to express real-time quota policy, because OpenClaw's built-in status surfaces provider/account usage well, but not every model-specific edge case.
 
@@ -239,10 +229,10 @@ This ended up being the useful split in production:
 
 | Workload | Model | Thinking |
 |---|---|---|
-| Main conversations | `gpt-5.4` | `medium` |
-| High-frequency cron/reactor checks | `spark` only if positively live-routable, else `gpt-5.3-codex` | `low` |
-| Mechanical watchdog loops | `spark` only if positively live-routable, else `gpt-5.3-codex` | `disabled` / `off` |
-| Nightly reviews, retros, strategy | `gpt-5.4` | `medium` |
+| Main conversations | `gpt-5.5` | `medium` |
+| High-frequency cron/reactor checks | `gpt-5.5-mini` | `low` |
+| Mechanical watchdog loops | `gpt-5.5-mini` | `disabled` / `off` |
+| Nightly reviews, retros, strategy | `gpt-5.5` | `medium` |
 | Sub-agents by default | inherited / override | `off` |
 
 The principle is simple: **don't spend reasoning where there is no reasoning to do.**
@@ -367,7 +357,7 @@ Hook paths are relative to the workspace. Register hooks in priority order, secu
         "payload": {
           "kind": "agentTurn",
           "message": "Generate morning briefing...",
-          "model": "openai-codex/gpt-5.4",
+          "model": "openai-codex/gpt-5.5",
           "thinking": "medium",
           "timeoutSeconds": 600
         },
@@ -401,7 +391,7 @@ If you migrate providers, do the cleanup properly:
 - normalize thinking levels job-by-job
 - clear stale `sessionKey` pinning on cron jobs if old sessions keep surfacing legacy model metadata
 - verify with greps or config inspection that no old provider strings remain in active config
-- if you keep optional fast-lane models like Spark, make sure cron jobs route through the same live policy rather than pinning them blindly
+- if you keep optional fast-lane models, make sure cron jobs route through the same live policy rather than pinning them blindly
 
 Cross-reference: see Chapter 6 for cron patterns and the heartbeat vs cron decision tree.
 

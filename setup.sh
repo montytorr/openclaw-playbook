@@ -98,6 +98,7 @@ echo ""
 # Create directory structure
 dirs=(
   "memory"
+  "memory/.dreams"
   "projects"
   "projects/archive"
   "scripts"
@@ -129,6 +130,7 @@ templates=(
   "IDENTITY.md"
   "USER.md"
   "HEARTBEAT.md"
+  "DREAMS.md"
   "TOOLS.md"
   "SECURITY.md"
   "openclaw.example.json"

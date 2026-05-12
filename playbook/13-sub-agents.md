@@ -250,6 +250,27 @@ If a sub-agent is compromised (e.g., by prompt injection from a file it reads), 
 
 Cross-reference: see [Chapter 4](04-hooks.md) for delegation-audit and delegation-policy hook patterns. See [Chapter 5](05-security.md) for the full security model.
 
+## TaskFlow For Durable Orchestration
+
+Use plain `sessions_spawn` when the parent can wait for one bounded child run and verify the result immediately.
+
+Use **TaskFlow** when the work needs to outlive one prompt or one detached run:
+- one owner session should receive the eventual result
+- child work may pause, wait, resume, or be cancelled
+- the orchestrator needs small persisted state between steps
+- multiple linked child tasks should be inspectable as one durable job
+
+Modern OpenClaw exposes this through the runtime task-flow surface. The canonical shape is `api.runtime.tasks.flow`; older `api.runtime.taskFlow` aliases may exist, but new code should prefer the canonical path.
+
+A managed flow usually follows this lifecycle:
+1. create a managed flow with goal/current step/state
+2. launch or link child work
+3. set waiting/blocked state when a person or external system is needed
+4. resume when the wait condition clears
+5. finish, fail, request cancel, or cancel the whole flow
+
+Keep business decisions above TaskFlow. TaskFlow owns identity, state, wait metadata, linked child tasks, and revision-safe mutations; your plugin, Lobster script, or calling code owns the actual routing logic.
+
 ## Cost Considerations
 
 Each sub-agent is a separate API session. That means:
