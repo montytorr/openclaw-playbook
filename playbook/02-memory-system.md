@@ -132,6 +132,30 @@ This is enough to build a very capable LLM wiki.
 
 Do **not** disappear into ontology theater. You don't need 70 node types before the thing is useful. Start with the objects your agent already touches every day and add structure only when retrieval quality benefits.
 
+## Obsidian Knowledge Vault
+
+If your operator already lives in Obsidian, or you want a human-browsable memory surface quickly, mirror the memory system into a managed Obsidian vault folder.
+
+The production pattern is:
+
+- copy canonical daily notes, `MEMORY.md`, project docs, system docs, and selected synthesis artifacts into a `Clawd/` folder
+- keep historical/archive memory under `Memory/backfill/` so it is searchable without pretending to be current truth
+- copy dream/recall artifacts as audit material, not source-of-truth facts
+- add a query helper so the agent can search Obsidian proactively
+- manage `.obsidian/graph.json` color groups so Memory, Backfill, Dreaming, System, Projects, and OpenClaw docs are visually distinct
+- generate bounded `Related` sections in vault copies only
+
+The graph rule matters: avoid pure hub/star topology. If every note links to `[[project-name]]`, the graph collapses into a dense ball. A better middle ground is:
+
+1. previous/next links between daily notes
+2. previous/next links between notes mentioning the same project
+3. capped links to generated project hub notes
+4. project hub notes that point only to first/latest memory mentions and key docs
+
+That produces recognizable clusters without turning project names into gravity wells.
+
+For a complete guide, including vault layout, graph colors, generated link blocks, cron behavior, and verification, see [Obsidian Knowledge Vault](../docs/obsidian-knowledge-vault.md).
+
 ## Daily Notes
 
 ### Format

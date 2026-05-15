@@ -19,6 +19,7 @@ Experienced developers who:
 - **System documentation** — detailed descriptions of every operational pattern: hooks, crons, task tracking, security gates, dashboards, webhook queues, A2A reactors, TaskFlow orchestration, and more
 - **Memory architecture** — the hybrid markdown + SQLite observation model that gives the agent real continuity
 - **LLM wiki guidance** — how to turn your memory system into a browsable knowledge surface for both humans and agents
+- **Obsidian knowledge vault pattern** — sync memory, projects, dreams, and system docs into a color-coded, queryable vault without creating graph hairballs
 - **Knowledge graph patterns** — a practical model for linking notes, tasks, docs, people, projects, contracts, and events
 - **Setup guidance** — how to stand up the memory stack, define ingestion rules, and keep retrieval high-signal
 - **Interface specifications** — enough detail to build compatible tools without copying our code
@@ -111,6 +112,7 @@ openclaw-playbook/
 │   │   ├── brownfield-migration-example.md ← Short active-workspace adoption example
 │   │   └── local-rollout-validation-example.md ← Verification-first local rollout example
 │   ├── llm-wiki.md        ← How the memory system becomes a human/agent wiki
+│   ├── obsidian-knowledge-vault.md ← Obsidian sync/query/graph pattern
 │   ├── one-pager.md       ← Fast-start summary
 │   ├── setup-memory-system.md ← Step-by-step memory stack setup guide
 │   └── validation.md      ← Smoke tests for the operating loop
@@ -188,6 +190,7 @@ This playbook is opinionated. The core beliefs:
 - **Agents need identity, not just instructions.** A SOUL.md that defines personality prevents corporate bot syndrome and makes your agent genuinely useful to interact with.
 - **Memory is infrastructure.** Without a proper memory system, every session starts from zero. The real breakthrough is the hybrid model: markdown for narrative continuity, SQLite for observation storage and retrieval, and `MEMORY.md` as the operator-facing digest.
 - **The memory system should become an LLM wiki.** Durable memory is more valuable when humans and agents can browse it, search it, trace sources, and understand relationships between notes, tasks, docs, people, and projects.
+- **Obsidian is a strong wiki surface when it is managed deliberately.** Sync canonical files, color-code graph groups, query it from the agent, and use middle-ground project links instead of pure star hubs.
 - **Knowledge graphs should stay practical.** The point is not ontology theater. The point is linking the things your agent already touches so retrieval, handoffs, and briefings improve over time.
 - **Track everything.** Rule Zero exists because autonomous agents that don't track their work become black boxes. If it happened, it should be logged.
 - **Brownfield beats fantasy.** Most real adoptions happen in already-active environments. Optimize for reversibility, wrappers, archives, and validation inside a dirty repo — not imaginary clean-room migrations.

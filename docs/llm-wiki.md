@@ -141,8 +141,24 @@ If your dashboard has a `knowledge` page, document it plainly:
 
 That sentence tells operators what the page is for and why it matters.
 
+## Obsidian as a Wiki Surface
+
+Obsidian is a strong implementation target for this layer if you treat it as a managed knowledge vault rather than a dumping ground.
+
+The durable pattern is:
+
+- mirror canonical memory, project docs, system docs, and selected synthesis artifacts into one managed vault folder
+- give the agent a query helper so it can search the vault without asking the human first
+- use graph color groups to separate memory, backfill, dreaming, projects, and system docs
+- generate related links, but avoid creating a giant star topology around project names
+
+The key graph lesson: project hubs are useful, but they should be middle-ground anchors. Link notes to the hub sparingly, then carry most of the structure through previous/next day and previous/next project-mention chains.
+
+See `docs/obsidian-knowledge-vault.md` for the full implementation pattern.
+
 ## Related Reading
 
 - `playbook/02-memory-system.md`
 - `playbook/08-dashboard.md`
 - `docs/setup-memory-system.md`
+- `docs/obsidian-knowledge-vault.md`
