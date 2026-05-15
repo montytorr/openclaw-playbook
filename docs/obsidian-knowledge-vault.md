@@ -307,4 +307,4 @@ The vault becomes useful to both audiences:
 - Agents get a queryable archive with evidence paths.
 - Graph links reflect actual work chronology instead of accidental keyword gravity.
 
-That is the difference between "we sync notes to Obsidian" and "Obsidian is our LLM wiki." 
+That is the difference between "we sync notes to Obsidian" and "Obsidian is our LLM wiki."
