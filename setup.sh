@@ -241,7 +241,7 @@ echo "  2. Edit $WORKSPACE/SOUL.md — define voice, boundaries, and behavioral 
 echo "  3. Edit $WORKSPACE/USER.md — tell your agent about yourself"
 echo "  4. Edit $WORKSPACE/AGENTS.md — customize the instruction set"
 echo "  5. Edit $WORKSPACE/SECURITY.md — set your security rules"
-echo "  6. Read the playbook: playbook/01-foundations.md through 16-infrastructure.md"
+echo "  6. Read the playbook: playbook/01-foundations.md through 17-operator-hardening.md"
 echo "  7. Build your scripts in $WORKSPACE/scripts/"
 echo "  8. Build your hooks in $WORKSPACE/hooks/"
 echo ""

@@ -90,7 +90,7 @@ Operationally:
 
 ### Model Configuration
 
-As of April 2026, one practical production pattern is **Codex-only routing**.
+As of the 2026.6 runtime line, one practical production pattern is **Codex-only routing**.
 
 Why? Because Anthropic Claude OAuth no longer reliably works with OpenClaw in the way many early setups depended on. If your system was built around Claude OAuth, assume that path may break and document a provider migration strategy.
 
@@ -194,6 +194,19 @@ Operationally, treat these as separate things:
 
 Changing only the model catalog is not enough if the runtime path is unhealthy or stale sessions keep dragging old state around.
 
+### Codex OAuth Profile Hygiene
+
+If your provider uses rotating OAuth tokens, do not casually copy one refresh token into multiple auth profiles or embedded bridge homes. That can create `refresh_token_reused` failures where one lane silently invalidates another.
+
+Operationally:
+- keep one canonical account/profile per provider unless you have a deliberate multi-account setup
+- remove obsolete `default` profiles after migrating to a named account profile
+- ensure embedded bridge homes and app-server state point at the same canonical profile
+- make your sync script delete stale profiles rather than preserving every historical shape forever
+- verify with a health script after restarts and package updates
+
+The durable rule is simple: one rotating token should have one owner.
+
 **Model strategy:**
 - `gpt-5.5` (`codex`) for the main agent and heavier reasoning work
 - `gpt-5.5-mini` (`mini`) as the stable fallback and routine-work lane
@@ -204,7 +217,7 @@ Changing only the model catalog is not enough if the runtime path is unhealthy o
 
 ### Quota-Aware Mini Routing
 
-As of the 2026.5 runtime line, keep the catalog boring: `gpt-5.5` primary, `gpt-5.5-mini` fallback. Do not keep stale optional fast-lane aliases in current examples unless your account has a separately verified lane and you actively route to it.
+As of the 2026.6 runtime line, keep the catalog boring: `gpt-5.5` primary, `gpt-5.5-mini` fallback. Do not keep stale optional fast-lane aliases in current examples unless your account has a separately verified lane and you actively route to it.
 
 The production-safe pattern is:
 - keep `gpt-5.5` as primary
@@ -253,6 +266,8 @@ Useful checks usually include:
 - `status-report`
 - a focused runtime health script
 - direct config inspection for the intended app-server policy
+- auth profile inventory that catches duplicate/stale Codex profiles
+- gateway service limits and current RSS checks when the gateway is a long-lived Node process
 
 ### Failure Classes To Expect
 
@@ -275,6 +290,7 @@ If you're moving from one provider stack to another, do all of it or you'll get 
 6. verify only the intended live agent remains active
 7. clear stale cron `sessionKey` pinning if historical sessions keep surfacing old provider metadata
 8. verify with config inspection / grep that the old provider no longer appears in live config
+9. verify auth profile uniqueness so old bridge homes cannot reuse a rotating token
 
 The annoying truth: changing only the main model is not enough. Crons and old pinned sessions will happily keep dragging dead provider assumptions around.
 
@@ -528,6 +544,7 @@ See `templates/openclaw.example.json` for a complete skeleton with placeholder v
 - [ ] Set up the heartbeat cron job
 - [ ] Add model configuration with fallback
 - [ ] Validate your config and test with `openclaw gateway restart`
+- [ ] Verify runtime truth after restart: provider status, auth profile health, gateway service limits, and stale pinned sessions
 - [ ] Set up config backups (git or manual copies)
 - [ ] Document any non-obvious settings in TOOLS.md
 

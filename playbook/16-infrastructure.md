@@ -254,6 +254,16 @@ For services that need both directions (e.g., webhook receiver calling back to t
 - A socat bridge service that relays traffic between Docker network and host loopback
 - UFW rules allowing Docker subnet traffic on specific ports
 
+Do not stop at editing firewall files. Verify the live rule is actually loaded:
+
+```bash
+docker network inspect <YOUR_NETWORK> --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}'
+curl -fsS http://<DOCKER_GATEWAY_IP>:18789/health
+iptables -S ufw-before-input | grep -- '--dport 18789'
+```
+
+The common failure mode is a correct-looking `/etc/ufw/before.rules` file whose rules were never loaded into the live chain after reload/restart drift.
+
 ## Tailscale
 
 If you only adopt one idea from this chapter, make it this one: **private-first access wins**. Tailscale is usually the cleanest way to keep the dangerous surfaces off the public internet.
@@ -430,6 +440,18 @@ Docker bypasses UFW by default (it manipulates iptables directly).
 
 In many cases, using `ufw-docker` or explicit firewall rules is the safer move. Research this before applying.
 
+### Container-To-Host Gateway Checks
+
+If containers call the OpenClaw gateway on the host, add a deterministic smoke check to your maintenance stack.
+
+Minimum useful checks:
+- container can reach the host gateway health endpoint
+- host firewall has the Docker subnet allow rule in the live chain, not just in a config file
+- gateway bind address and advertised URL match the route containers use
+- failures are retried after UFW reload before waking a model-backed recovery agent
+
+This catches the "host is healthy but containers time out" class of bugs before application jobs start failing.
+
 ## Putting It All Together
 
 ### Checklist for a New Server
@@ -463,4 +485,4 @@ In many cases, using `ufw-docker` or explicit firewall rules is the safer move. 
 
 ---
 
-*Previous: [Chapter 15 — Context Management](15-context-management.md)*
+*Previous: [Chapter 15 — Context Management](15-context-management.md) | Next: [Chapter 17 — Operator Hardening](17-operator-hardening.md)*

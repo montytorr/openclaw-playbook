@@ -2,7 +2,7 @@
 
 An educational playbook for running an autonomous OpenClaw agent. Built from real operational patterns — battle-tested across months of 24/7 autonomous operation.
 
-**Current examples reflect a Codex-first OpenClaw 2026.5 production setup** with `gpt-5.5` as the primary model and `gpt-5.5-mini` as the stable fallback/routine-work lane. Optional fast lanes should be positively verified by a strong account-scoped signal before they are routed, and should not be placed in the hard fallback chain.
+**Current examples reflect a Codex-first OpenClaw 2026.6 production setup** with `gpt-5.5` as the primary model and `gpt-5.5-mini` as the stable fallback/routine-work lane. Optional fast lanes should be positively verified by a strong account-scoped signal before they are routed, and should not be placed in the hard fallback chain.
 
 ## Who This Is For
 
@@ -25,6 +25,7 @@ Experienced developers who:
 - **Interface specifications** — enough detail to build compatible tools without copying our code
 - **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
 - **Validation docs** — a verification-first rollout path for proving the loop actually works
+- **Operator hardening patterns** — host-level watchdogs, gateway memory caps, Codex auth hygiene, session-store pressure control, and Docker bridge verification
 - **Verification scripts** — bundled starter checks for integrity, memory readiness, generic smoke tests, brownfield checks, and full local rollout validation
 - **Brownfield extras** — adapter scaffolds, migration case studies, and verifiers for active-workspace adoption
 - **GitHub Actions CI** — a minimal verify workflow for push + pull_request
@@ -62,7 +63,7 @@ chmod +x setup.sh
 ./setup.sh --workspace /tmp/clawd --non-interactive --skip-commit
 
 # Start reading
-# The playbook is ordered — read chapters 00 through 16 sequentially
+# The playbook is ordered — read chapters 00 through 17 sequentially
 ```
 
 ## Structure
@@ -91,7 +92,8 @@ openclaw-playbook/
 │   ├── 13-sub-agents.md  ← Sub-agent orchestration, TaskFlow & parallel work
 │   ├── 14-skills.md      ← Skills system & on-demand instructions
 │   ├── 15-context-management.md ← Context windows & compaction resilience
-│   └── 16-infrastructure.md  ← Traefik, Docker networking, Tailscale, DNS
+│   ├── 16-infrastructure.md  ← Traefik, Docker networking, Tailscale, DNS
+│   └── 17-operator-hardening.md ← Watchdogs, memory limits, runtime drift, and recovery
 ├── templates/             ← Ready-to-use workspace files
 │   ├── AGENTS.md          ← Main instruction set template
 │   ├── SOUL.md            ← Personality & behavioral guardrails
@@ -196,6 +198,7 @@ This playbook is opinionated. The core beliefs:
 - **Brownfield beats fantasy.** Most real adoptions happen in already-active environments. Optimize for reversibility, wrappers, archives, and validation inside a dirty repo — not imaginary clean-room migrations.
 - **Security is non-negotiable.** The moment you give an agent access to your email, git, and infrastructure, you need defense in depth. Not paranoia — engineering.
 - **Build your own tools.** Copying someone else's hooks and scripts gives you their security assumptions without their context. Understand the pattern, then implement it yourself.
+- **Runtime guardrails beat cleanup after failure.** If a gateway can leak to OOM, or a cron can burn a model lane every few minutes, constrain it outside the agent before it hurts the whole host.
 - **Private-first beats public-by-default.** If an admin surface can live behind Tailscale or another private network, keep it there.
 
 ## Verification

@@ -256,6 +256,39 @@ Don't have a cron job AND a heartbeat checking the same thing. Pick one mechanis
 | Increase heartbeat interval during quiet hours | Fewer overnight checks |
 | Use `once: true` for reminders | No recurring cost |
 
+## Host Cron For Deterministic Work
+
+Not every scheduled job belongs inside OpenClaw.
+
+After a system has been running for a while, split recurring work into two buckets:
+
+- **Model work**: synthesis, judgement, prioritization, human-facing summaries
+- **Deterministic work**: shell health checks, log rotation, session pruning, Docker probes, data sync, gateway RSS checks
+
+The deterministic bucket should usually move to host cron or systemd timers. That keeps the model lanes for real reasoning and prevents small watchdogs from creating hundreds of isolated OpenClaw sessions per day.
+
+Good candidates for host cron:
+- refresh cached provider/model status
+- inspect runtime health and log anomalies
+- prune stale session sidecars and oversized artifacts
+- run deterministic A2A reactor polling when the no-op path can exit without a model
+- verify Docker containers and bridge reachability
+- monitor gateway RSS and restart cleanly before the kernel OOM killer gets involved
+
+Keep the host jobs small and observable:
+
+```cron
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+*/2 * * * * root /opt/openclaw/scripts/gateway-memory-guard >/dev/null 2>> /var/log/openclaw/gateway-memory-guard.log || true
+*/10 * * * * root /opt/openclaw/scripts/cron-runtime-watchdog >> /var/log/openclaw/monitors.log 2>&1 || true
+```
+
+Design rule: if the success path is "nothing to say", it probably should not spend a model turn.
+
+Cross-reference: see [Chapter 17](17-operator-hardening.md) for gateway memory guards and session-store pressure control.
+
 ## Codex-Only Production Pattern
 
 If you're running OpenClaw on Codex after provider migration, a sane default split looks like this:
@@ -281,6 +314,7 @@ A good trigger list for increasing thinking:
 - [ ] Set up HEARTBEAT.md with your initial checklist
 - [ ] Create `memory/heartbeat-state.json` for check tracking
 - [ ] Configure 2-3 essential cron jobs (morning briefing, nightly health, integrity)
+- [ ] Move deterministic high-frequency maintenance to host cron or systemd timers
 - [ ] Define quiet hours in your heartbeat configuration
 - [ ] Set up cost tracking for cron jobs (prefer bundled `diagnostics-otel` via a local collector)
 - [ ] Review and optimize after one week of operation

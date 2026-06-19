@@ -207,6 +207,34 @@ Expected:
 - no silent regression from "works in config" to "broken at runtime"
 - no approval or auth surprises caused by overwritten runtime state
 
+## 13. Operator hardening verification
+
+Before leaving an OpenClaw host unattended, verify the host-level guardrails too:
+
+```bash
+openclaw gateway status --deep
+openclaw memory status --deep
+systemctl --user show openclaw-gateway.service \
+  -p ActiveState -p MainPID -p MemoryCurrent -p MemoryHigh -p MemoryMax -p MemorySwapMax -p Environment -p OOMPolicy
+```
+
+Expected:
+- gateway connectivity is OK
+- memory search is ready and not unexpectedly paused
+- gateway memory/swap limits are finite if the gateway is a long-lived service
+- Node heap limits or equivalent runtime caps are visible in the service environment
+
+If containers depend on the host gateway, verify from inside the container network:
+
+```bash
+docker exec <APP_CONTAINER> curl -fsS http://<HOST_BRIDGE_IP>:18789/health
+iptables -S ufw-before-input | grep -- '--dport 18789'
+```
+
+Expected:
+- container-to-host gateway access works
+- firewall allow rules are present in the live chain, not only in config files
+
 ## CI
 
 GitHub Actions workflow: `.github/workflows/verify.yml`
@@ -250,5 +278,6 @@ You are ready to build on the playbook when:
 - one hook can block unsafe actions
 - cron models/thinking are intentional
 - Codex runtime health is verifiable, not assumed from config alone
+- host-level gateway/session/cron guardrails exist for deterministic failure modes
 - sub-agent output is verified, not trusted
 - brownfield assumptions are checked with repeatable scripts, not conversational confidence
