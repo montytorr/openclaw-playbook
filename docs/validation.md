@@ -225,7 +225,8 @@ Expected:
 - gateway memory/swap limits are finite if the gateway is a long-lived service
 - service cgroup memory is being checked, not only the gateway PID RSS
 - gateway `/health` responds quickly
-- health-only restarts are debounced so one transient timeout does not interrupt Discord turns
+- health-only restarts are disabled by default or explicitly opt-in
+- active work is not restarted merely because a pressure grace timer elapsed
 - Node heap limits or equivalent runtime caps are visible in the service environment
 
 If containers depend on the host gateway, verify from inside the container network:

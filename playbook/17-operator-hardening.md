@@ -32,9 +32,9 @@ Example user-service drop-in:
 # ~/.config/systemd/user/openclaw-gateway.service.d/40-memory.conf
 [Service]
 Environment=NODE_OPTIONS=--max-old-space-size=1536
-MemoryHigh=2400M
-MemoryMax=3200M
-MemorySwapMax=512M
+MemoryHigh=4G
+MemoryMax=5G
+MemorySwapMax=1G
 OOMPolicy=stop
 OOMScoreAdjust=100
 ```
@@ -69,10 +69,11 @@ Run a small host-level watchdog every few minutes. It should:
 - read the whole service cgroup memory from systemd, not only the gateway PID RSS
 - probe `http://127.0.0.1:18789/health` with a short timeout
 - log at a warning threshold
-- restart gracefully at a higher threshold when idle
-- force a graceful restart at a final threshold if memory keeps growing or `/health` stops responding
-- treat gateway status timeouts as unsafe/idle for restart purposes, not as proof of active useful work
-- debounce restarts and require persistent unhealthy state before restarting for `/health` alone
+- restart gracefully at a higher threshold only when the gateway is confirmed idle
+- force a graceful restart only at a final memory threshold
+- treat gateway status timeouts as unknown activity, not as proof the gateway is idle
+- log `/health` failures by default; do not make health-only failures restart the gateway unless the operator explicitly opts in
+- debounce all restart paths
 
 This belongs in host cron or a systemd timer, not an OpenClaw isolated model cron.
 
@@ -84,9 +85,9 @@ Example cron shape:
 
 Verify the guard against concurrent status checks. A sloppy process matcher can accidentally watch the CLI status process instead of the daemon.
 
-Also verify it catches sidecar pressure. Some gateway failures come from `openclaw-hooks`, embedded runtime workers, or other child processes inside the service cgroup. The Node gateway PID can look modest while `MemoryCurrent` for the service is already near `MemoryHigh`.
+Also verify it catches sidecar pressure. Some gateway failures come from `openclaw-hooks`, embedded runtime workers, or other child processes inside the service cgroup. The Node gateway PID can look modest while `MemoryCurrent` for the service is already near `MemoryHigh`. Size the service cgroup for those sidecars. A cap that only fits the gateway Node heap can create avoidable restarts during normal hook-heavy recovery work.
 
-Do not restart on a single `/health` timeout unless memory is already at the hard force threshold. Short stalls can happen during channel probes, Codex app-server startup, or Discord recovery. A useful guard logs the first unhealthy sample, tracks `unhealthy_since`, and only restarts after several consecutive minutes of unhealthy state. Otherwise the guard becomes the source of the user-facing "interrupted by a gateway restart" notices it was meant to prevent.
+Do not restart on `/health` timeouts alone unless the operator has made that tradeoff explicitly. Short stalls can happen during channel probes, Codex app-server startup, hook sidecar bursts, or Discord recovery. A useful guard logs unhealthy samples and restarts only for confirmed idle pressure or hard memory thresholds. Otherwise the guard becomes the source of the user-facing "interrupted by a gateway restart" notices it was meant to prevent.
 
 Useful live probes:
 
@@ -227,7 +228,8 @@ Expected:
 - gateway has finite memory/swap limits
 - gateway `/health` responds quickly
 - service cgroup memory is below warning/restart thresholds
-- health-only restart behavior is debounced, not triggered by one transient timeout
+- health-only restart behavior is disabled by default or explicitly opt-in
+- active work is never restarted merely because a grace timer elapsed
 - Codex auth profile inventory is clean
 - Discord channel status is connected and audit-clean if Discord is part of the deployment
 - deterministic watchdogs exit silently on success
