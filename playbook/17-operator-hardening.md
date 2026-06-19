@@ -66,9 +66,12 @@ export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 Run a small host-level watchdog every few minutes. It should:
 - identify the real gateway daemon PID, not `openclaw gateway status`
 - read RSS from `/proc/<pid>/status`
+- read the whole service cgroup memory from systemd, not only the gateway PID RSS
+- probe `http://127.0.0.1:18789/health` with a short timeout
 - log at a warning threshold
 - restart gracefully at a higher threshold when idle
-- force a graceful restart at a final threshold if memory keeps growing
+- force a graceful restart at a final threshold if memory keeps growing or `/health` stops responding
+- treat gateway status timeouts as unsafe/idle for restart purposes, not as proof of active useful work
 - debounce restarts
 
 This belongs in host cron or a systemd timer, not an OpenClaw isolated model cron.
@@ -80,6 +83,43 @@ Example cron shape:
 ```
 
 Verify the guard against concurrent status checks. A sloppy process matcher can accidentally watch the CLI status process instead of the daemon.
+
+Also verify it catches sidecar pressure. Some gateway failures come from `openclaw-hooks`, embedded runtime workers, or other child processes inside the service cgroup. The Node gateway PID can look modest while `MemoryCurrent` for the service is already near `MemoryHigh`.
+
+Useful live probes:
+
+```bash
+systemctl --user show openclaw-gateway.service \
+  -p MainPID -p MemoryCurrent -p MemoryPeak -p MemoryHigh -p MemoryMax -p MemorySwapMax
+curl -m 5 -fsS http://127.0.0.1:18789/health
+```
+
+If `/health` times out, treat the gateway as wedged even if the process still exists.
+
+## Discord Restart Recovery
+
+Discord "not reacting" can be a symptom of a wedged gateway, not a Discord token or intent problem.
+
+The pattern to check:
+- `openclaw channels status --deep --probe` hangs or reports stale transport
+- `openclaw message read --channel discord ...` hangs
+- gateway `/health` times out
+- restart recovery creates `running` tasks for old Discord sessions
+- logs show stale transcript locks or interrupted main-session recovery
+
+Recovery sequence:
+
+```bash
+openclaw tasks list --status running --json
+openclaw tasks cancel <task-id-or-run-id>
+openclaw tasks maintenance --apply
+openclaw channels status --deep --probe
+openclaw message read --channel discord --target channel:<CHANNEL_ID> --limit 3
+```
+
+If a Discord channel session is wedged behind a dead recovery turn, archive the affected transcript and remove only that session key from the session store. Do not delete the whole store. After reset, restart the gateway and verify the channel audit is clean.
+
+Also keep enabled Discord channel IDs current. A channel audit can fail on stale `Unknown Channel` entries even when the live listener works.
 
 ## Session Store Pressure
 
@@ -183,15 +223,19 @@ Expected:
 - gateway connectivity is OK
 - memory search is not dirty or paused unexpectedly
 - gateway has finite memory/swap limits
+- gateway `/health` responds quickly
+- service cgroup memory is below warning/restart thresholds
 - Codex auth profile inventory is clean
+- Discord channel status is connected and audit-clean if Discord is part of the deployment
 - deterministic watchdogs exit silently on success
 - no duplicate OpenClaw cron still performs the same host-level check
 
 ## What To Build
 
 - [ ] Add systemd memory limits for the gateway service
-- [ ] Add a host-level gateway RSS guard
+- [ ] Add a host-level gateway service-memory/RSS/health guard
 - [ ] Add session-store rotation/prune maintenance
+- [ ] Add a Discord restart-recovery cleanup runbook if Discord is enabled
 - [ ] Move deterministic high-frequency cron work out of model-backed cron
 - [ ] Add Codex auth profile inventory to health checks
 - [ ] Verify Docker bridge reachability from containers

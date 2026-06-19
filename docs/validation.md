@@ -214,14 +214,17 @@ Before leaving an OpenClaw host unattended, verify the host-level guardrails too
 ```bash
 openclaw gateway status --deep
 openclaw memory status --deep
+curl -m 5 -fsS http://127.0.0.1:18789/health
 systemctl --user show openclaw-gateway.service \
-  -p ActiveState -p MainPID -p MemoryCurrent -p MemoryHigh -p MemoryMax -p MemorySwapMax -p Environment -p OOMPolicy
+  -p ActiveState -p MainPID -p MemoryCurrent -p MemoryPeak -p MemoryHigh -p MemoryMax -p MemorySwapMax -p Environment -p OOMPolicy
 ```
 
 Expected:
 - gateway connectivity is OK
 - memory search is ready and not unexpectedly paused
 - gateway memory/swap limits are finite if the gateway is a long-lived service
+- service cgroup memory is being checked, not only the gateway PID RSS
+- gateway `/health` responds quickly
 - Node heap limits or equivalent runtime caps are visible in the service environment
 
 If containers depend on the host gateway, verify from inside the container network:
@@ -234,6 +237,19 @@ iptables -S ufw-before-input | grep -- '--dport 18789'
 Expected:
 - container-to-host gateway access works
 - firewall allow rules are present in the live chain, not only in config files
+
+If Discord is enabled, verify the listener path itself:
+
+```bash
+openclaw channels status --deep --probe
+openclaw message read --channel discord --target channel:<CHANNEL_ID> --limit 3
+openclaw tasks list --status running --json
+```
+
+Expected:
+- Discord is connected and audit-clean
+- message reads complete without hanging
+- no stale restart-recovery tasks are still running for Discord sessions
 
 ## CI
 

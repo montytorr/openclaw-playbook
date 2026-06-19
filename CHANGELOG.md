@@ -7,6 +7,7 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 ## [Unreleased]
 
 ### Added
+- Gateway hardening details for service-cgroup memory, `/health` probing, and Discord restart-recovery cleanup after wedged gateway sessions.
 - Operator hardening chapter covering gateway memory limits, external RSS watchdogs, session-store pressure, cron offload, Codex auth drift, Docker bridge drift, and post-update verification.
 - Validation checks for gateway memory caps and container-to-host gateway reachability.
 - `CHANGELOG.md` to track project history in a lightweight, human-maintained format.
@@ -16,6 +17,7 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 - Stronger validation guidance for Codex runtime health and post-update verification.
 
 ### Changed
+- Operator validation now checks gateway `/health`, service cgroup memory, Discord channel audit, and stale restart-recovery tasks.
 - README and chapter cross-references now include the operator hardening layer and OpenClaw 2026.6 runtime posture.
 - Cron, config, and infrastructure chapters now document the June production lessons around deterministic host cron, single-profile Codex OAuth hygiene, and live UFW/Docker bridge verification.
 - README now points contributors at changelog upkeep as part of normal release hygiene.
