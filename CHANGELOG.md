@@ -17,6 +17,7 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 - Stronger validation guidance for Codex runtime health and post-update verification.
 
 ### Changed
+- Gateway guard guidance now requires persistent unhealthy state before health-only restarts, avoiding false-positive Discord interruption notices from a single `/health` timeout.
 - Operator validation now checks gateway `/health`, service cgroup memory, Discord channel audit, and stale restart-recovery tasks.
 - README and chapter cross-references now include the operator hardening layer and OpenClaw 2026.6 runtime posture.
 - Cron, config, and infrastructure chapters now document the June production lessons around deterministic host cron, single-profile Codex OAuth hygiene, and live UFW/Docker bridge verification.
