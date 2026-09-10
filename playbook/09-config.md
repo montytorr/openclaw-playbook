@@ -25,12 +25,12 @@ The main configuration file lives at `~/.openclaw/openclaw.json` (or wherever yo
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openai-codex/gpt-5.5",
-        "fallbacks": ["openai-codex/gpt-5.5-mini"]
+        "primary": "<PROVIDER>/<PRIMARY_MODEL>",
+        "fallbacks": ["<PROVIDER>/<ROUTINE_MODEL>"]
       },
       "models": {
-        "openai-codex/gpt-5.5": { "alias": "codex" },
-        "openai-codex/gpt-5.5-mini": { "alias": "mini" }
+        "<PROVIDER>/<PRIMARY_MODEL>": { "alias": "primary" },
+        "<PROVIDER>/<ROUTINE_MODEL>": { "alias": "routine" }
       },
       "workspace": "/root/clawd",
       "thinkingDefault": "medium",
@@ -64,7 +64,8 @@ Key decisions:
 
 ### Native Memory Configuration
 
-As of April 2026, the sane default is to use **OpenClaw native local memory** rather than leaning on a legacy external memory plugin name.
+Prefer **OpenClaw native local memory** where the installed release supports it;
+verify the schema and command against that release.
 
 A practical baseline looks like this:
 
@@ -90,9 +91,9 @@ Operationally:
 
 ### Model Configuration
 
-As of the 2026.6 runtime line, one practical production pattern is **Codex-only routing**.
-
-Why? Because Anthropic Claude OAuth no longer reliably works with OpenClaw in the way many early setups depended on. If your system was built around Claude OAuth, assume that path may break and document a provider migration strategy.
+Choose providers based on current support and account health. Do not encode a
+provider migration or OAuth claim as a universal rule; verify it for the installed
+release and document the tested fallback path.
 
 A solid Codex setup looks like this:
 
@@ -112,12 +113,12 @@ A solid Codex setup looks like this:
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openai-codex/gpt-5.5",
-        "fallbacks": ["openai-codex/gpt-5.5-mini"]
+        "primary": "<PROVIDER>/<PRIMARY_MODEL>",
+        "fallbacks": ["<PROVIDER>/<ROUTINE_MODEL>"]
       },
       "models": {
-        "openai-codex/gpt-5.5": { "alias": "codex" },
-        "openai-codex/gpt-5.5-mini": { "alias": "mini" }
+        "<PROVIDER>/<PRIMARY_MODEL>": { "alias": "primary" },
+        "<PROVIDER>/<ROUTINE_MODEL>": { "alias": "routine" }
       },
       "thinkingDefault": "medium",
       "subagents": {
@@ -208,8 +209,8 @@ Operationally:
 The durable rule is simple: one rotating token should have one owner.
 
 **Model strategy:**
-- `gpt-5.5` (`codex`) for the main agent and heavier reasoning work
-- `gpt-5.5-mini` (`mini`) as the stable fallback and routine-work lane
+- `<PRIMARY_MODEL>` for the main agent and heavier reasoning work
+- `<ROUTINE_MODEL>` as the verified fallback and routine-work lane
 - main session default thinking: `medium`
 - sub-agent default thinking: `off` (escalate only when needed)
 - per-cron overrides based on workload, not habit
@@ -217,22 +218,23 @@ The durable rule is simple: one rotating token should have one owner.
 
 ### Quota-Aware Mini Routing
 
-As of the 2026.6 runtime line, keep the catalog boring: `gpt-5.5` primary, `gpt-5.5-mini` fallback. Do not keep stale optional fast-lane aliases in current examples unless your account has a separately verified lane and you actively route to it.
+Keep the catalog boring: one verified primary and one verified fallback. Do not add
+optional fast lanes unless an account-scoped probe proves they are usable.
 
 The production-safe pattern is:
-- keep `gpt-5.5` as primary
-- keep `gpt-5.5-mini` as the real fallback
-- use `gpt-5.5-mini` for routine crons/reactors and low-ambiguity maintenance
-- reserve `gpt-5.5` for main conversations, reviews, synthesis, and high-stakes work
+- keep the verified primary as primary
+- keep the verified routine model as the real fallback
+- use the routine model for mechanical maintenance
+- reserve the primary for main conversations, reviews, synthesis, and high-stakes work
 - verify routing with actual runtime status, not just model catalog strings
 
 Why? Because fallback models should be dependable. Optional fast lanes are useful only after they are proven live for the account and kept out of the hard fallback chain.
 
 A practical router policy looks like:
-- high complexity -> `gpt-5.5`
-- medium complexity -> `gpt-5.5-mini` unless quality matters more than cost
-- low complexity -> `gpt-5.5-mini` with low/off thinking
-- unknown or high-stakes -> `gpt-5.5`
+- high complexity -> verified primary model
+- medium complexity -> verified routine model unless quality matters more than cost
+- low complexity -> verified routine model with low/off thinking
+- unknown or high-stakes -> verified primary model
 
 This is also the cleanest place to express real-time quota policy, because OpenClaw's built-in status surfaces provider/account usage well, but not every model-specific edge case.
 
@@ -242,10 +244,10 @@ This ended up being the useful split in production:
 
 | Workload | Model | Thinking |
 |---|---|---|
-| Main conversations | `gpt-5.5` | `medium` |
-| High-frequency cron/reactor checks | `gpt-5.5-mini` | `low` |
-| Mechanical watchdog loops | `gpt-5.5-mini` | `disabled` / `off` |
-| Nightly reviews, retros, strategy | `gpt-5.5` | `medium` |
+| Main conversations | verified primary | intentional budget |
+| High-frequency cron/reactor checks | verified routine model | low |
+| Mechanical watchdog loops | verified routine model | disabled / off |
+| Nightly reviews, retros, strategy | verified primary | intentional budget |
 | Sub-agents by default | inherited / override | `off` |
 
 The principle is simple: **don't spend reasoning where there is no reasoning to do.**
@@ -373,7 +375,7 @@ Hook paths are relative to the workspace. Register hooks in priority order, secu
         "payload": {
           "kind": "agentTurn",
           "message": "Generate morning briefing...",
-          "model": "openai-codex/gpt-5.5",
+          "model": "<PROVIDER>/<PRIMARY_MODEL>",
           "thinking": "medium",
           "timeoutSeconds": 600
         },

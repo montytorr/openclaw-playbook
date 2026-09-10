@@ -50,7 +50,9 @@ This is the most important file in your workspace. OpenClaw injects it into ever
 
 #### Rule Zero — Track Before You Work
 
-Every action gets tracked. Before touching anything, the agent runs `task start`. After completing, `task update done`. No exceptions.
+Every meaningful action gets tracked in the deployment's task authority. Check first,
+then create/claim work; checkpoint durable work and close it with an explicit
+resolution. See [Chapter 3](03-task-management.md).
 
 This exists because agents reliably forget to track work unless it's the absolute first instruction. We tried softer approaches:
 - "Remember to track your work" — agent forgot within 3 messages

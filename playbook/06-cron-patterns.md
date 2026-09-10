@@ -99,7 +99,7 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Generate a morning briefing: check calendar for today's events, scan email for anything urgent, check market pre-open for any positions that need attention. Deliver a concise summary.",
-    "model": "openai-codex/gpt-5.5",
+    "model": "<PROVIDER>/<PRIMARY_MODEL>",
     "thinking": "medium",
     "timeoutSeconds": 600
   },
@@ -125,7 +125,7 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Run system health check: Docker containers, disk space, cron job status, recent error logs. Only report if something needs attention.",
-    "model": "openai-codex/gpt-5.5-mini",
+    "model": "<PROVIDER>/<ROUTINE_MODEL>",
     "thinking": "low",
     "timeoutSeconds": 300
   },
@@ -150,7 +150,7 @@ Cron jobs fire at exact times and run in isolated sessions by default.
   "payload": {
     "kind": "agentTurn",
     "message": "Run integrity-check. If any files have unexpected changes, report immediately. Otherwise, stay silent.",
-    "model": "openai-codex/gpt-5.5-mini",
+    "model": "<PROVIDER>/<ROUTINE_MODEL>",
     "thinking": "disabled",
     "timeoutSeconds": 300
   },
@@ -247,8 +247,8 @@ Don't have a cron job AND a heartbeat checking the same thing. Pick one mechanis
 
 | Strategy | Savings |
 |----------|---------|
-| Use `gpt-5.5-mini` for routine crons/reactors | Lower cost where the task is mechanical |
-| Reserve `gpt-5.5` for analysis/review jobs | Higher quality where it matters |
+| Use a verified routine model for routine crons/reactors | Lower cost where the task is mechanical |
+| Reserve the verified primary for analysis/review jobs | Higher quality where it matters |
 | Set `thinking: "low"` for reactor/maintenance jobs | Less reasoning burn |
 | Set `thinking: "disabled"` for mechanical loops | Avoid wasted thought tokens |
 | Batch checks into heartbeats | Fewer total sessions |
@@ -293,11 +293,11 @@ Cross-reference: see [Chapter 17](17-operator-hardening.md) for gateway memory g
 
 If you're running OpenClaw on Codex after provider migration, a sane default split looks like this:
 
-- **Main agent:** `openai-codex/gpt-5.5` + `thinking=medium`
+- **Main agent:** verified primary model + an intentional thinking budget
 - **Sub-agents by default:** inherited model, but `thinking=off`
-- **High-frequency cron checks / reactors:** `openai-codex/gpt-5.5-mini`, with `thinking=low`
-- **Mechanical watchdogs / stop-loss loops:** `gpt-5.5-mini`, with `thinking=disabled`
-- **Nightly/weekly analysis jobs:** `gpt-5.5` + `thinking=medium`
+- **High-frequency cron checks / reactors:** verified routine model, with `thinking=low`
+- **Mechanical watchdogs / stop-loss loops:** verified routine model, with `thinking=disabled`
+- **Nightly/weekly analysis jobs:** verified primary model + an intentional thinking budget
 
 Escalate reasoning only when the work is actually ambiguous, multi-step, or synthesis-heavy.
 

@@ -36,23 +36,27 @@ Expected:
 - identity files exist
 - config skeleton exists under `config/`
 
-## 2. Task tracking works
+## 2. The task authority works
+
+Use the configured authority. For Cairn:
 
 ```bash
-WORKSPACE_ROOT=$(pwd) reference/scripts/task start "Validation task" "Smoke test" other
-WORKSPACE_ROOT=$(pwd) reference/scripts/task start "Validation task" "Smoke test" other
-WORKSPACE_ROOT=$(pwd) reference/scripts/task list
-WORKSPACE_ROOT=$(pwd) reference/scripts/task sprint
-WORKSPACE_ROOT=$(pwd) reference/scripts/task show doesnotexist || echo "show exited $? (expected 2)"
-WORKSPACE_ROOT=$(pwd) reference/scripts/task delete doesnotexist || echo "delete exited $? (expected 2)"
+cairn check "playbook validation"
+cairn add "Playbook validation" --project <PROJECT> --type docs --priority low
+cairn claim <REF>
+cairn note <REF> "validation note" --kind note
+cairn checkpoint <REF> --summary "validation checkpoint"
+cairn done <REF> --resolution "authority round trip passed" --kind fixed
 ```
 
 Expected:
-- a task id is printed
-- repeating the same `task start` does not crash
-- the task appears as `in-progress`
-- `task sprint` prints grouped output
-- not-found mutations/details return exit code `2`
+- the authority returns a durable reference
+- the task is retrievable after a new shell/session
+- notes and checkpoints are visible
+- the task closes with an explicit resolution
+
+The bundled `reference/scripts/task` is a legacy educational scaffold; validate it
+only when testing that scaffold, not as proof of production task ownership.
 
 ## 3. Memory extraction works
 
@@ -111,14 +115,14 @@ Expected:
 ## 6. Cron model split is intentional
 
 Check your config / cron definitions:
-- heavy review jobs → `gpt-5.5` + `medium`
-- routine checks → `gpt-5.5-mini`, with `low`
-- mechanical loops → `gpt-5.5-mini`, with `disabled`
+- heavy review jobs → a verified primary model + intentional reasoning budget
+- routine checks → a verified routine model, with low thinking
+- mechanical loops → a verified routine model, with thinking disabled/off
 
 Expected:
 - no accidental expensive model on high-frequency jobs
 - no stale old-provider model strings in active config
-- no optional fast-lane model in the hard fallback chain without account-scoped proof
+- no optional model in the hard fallback chain without account-scoped proof
 
 ## 7. Sub-agent verification loop exists
 

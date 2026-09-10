@@ -17,8 +17,8 @@ If you only want the essence, start here.
    - expose the memory layer as an LLM wiki / knowledge page
 
 3. **Task tracking**
-   - `task start` before work
-   - `task update <id> done` when complete
+   - check the authoritative task system before work
+   - claim/checkpoint durable work and close with a resolution
 
 4. **Timing + enforcement**
    - heartbeat for batched checks
@@ -40,8 +40,10 @@ That is what turns an agent from session-based assistance into compounding opera
 ## Minimum Viable Loop
 
 ```bash
-# 1. Start work
-task start "Fix thing" "What was requested" other
+# 1. Start work (Cairn example; use your deployment's authority)
+cairn check "fix thing"
+cairn add "Fix thing" --project <PROJECT> --type bug --priority medium
+cairn claim <REF>
 
 # 2. Write memory during work
 echo "# 2026-04-04" >> memory/2026-04-04.md
@@ -52,17 +54,18 @@ reference/scripts/mem-extract
 reference/scripts/mem-search "issue X"
 
 # 4. Finish work
-task update <id> done "What changed"
+cairn done <REF> --resolution "What changed" --kind fixed
 ```
 
-## Default Model Split (Codex-first)
+## Model routing
 
-- Main agent: `gpt-5.5` + `thinking=medium`
-- Cron/reactors: `gpt-5.5-mini`, with `thinking=low`
-- Mechanical loops: `gpt-5.5-mini`, with `thinking=disabled`
+- Main agent: `<PRIMARY_MODEL>` with an intentional thinking budget
+- Cron/reactors: `<ROUTINE_MODEL>` with low/off thinking where appropriate
+- Mechanical loops: a verified low-cost model, with thinking disabled/off
 - Sub-agents: `thinking=off` unless reasoning is actually needed
 
-If you add optional fast-lane models later, "routable" should mean the alias exists, provider-level usage is acceptable, and a strong account-scoped signal says the model is actually usable. If that proof is missing, keep routing on the stable `gpt-5.5`/`gpt-5.5-mini` pair.
+Model IDs are account- and release-specific. Verify aliases, provider health, and
+fallback behavior live; never treat a model name in this document as current.
 
 ## Brownfield First, If Applicable
 
@@ -93,7 +96,7 @@ Meaning:
 ## Validation Quick Checks
 
 - Can the agent write a daily note?
-- Can `task list` show current work?
+- Can the authoritative task system show current work?
 - Can heartbeat wake and return `HEARTBEAT_OK`?
 - Can a dangerous tool call be blocked by a hook?
 - Can a completed task be found later via memory search?

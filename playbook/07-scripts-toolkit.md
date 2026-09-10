@@ -255,13 +255,15 @@ Cross-reference: see Chapter 2 for the full memory system. For a minimal working
 
 The primary task tracking interface. Fully documented in Chapter 3.
 
-For a minimal working example, see `reference/scripts/task`.
+For a minimal educational example, see `reference/scripts/task`. It is a legacy
+scaffold, not the production task authority; use the deployment's configured system.
 
 ```bash
-task start "Title" "Input" [category] [priority]
-task done "Title" "Input" "Output" [category]
-task update <id> <status> "Description"
-task list [status]
+cairn check "subject"
+cairn add "Title" --project <PROJECT> --type improvement --priority medium
+cairn claim <REF>
+cairn note <REF> "Description" --kind note
+cairn done <REF> --resolution "Output" --kind fixed
 task search "query"
 task sprint
 ```

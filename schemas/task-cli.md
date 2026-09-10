@@ -1,5 +1,10 @@
 # Task CLI — Full Interface Specification
 
+> **Legacy educational schema:** this documents the bundled SQLite scaffold only.
+> It is not the production task-authority recommendation. New deployments should
+> use their existing shared authority (Cairn in the current reference environment)
+> and should not create a second local task database without an explicit adapter plan.
+
 This document specifies the complete interface for the task management CLI. Build your own implementation that matches this interface to be compatible with the playbook's patterns.
 
 ## Commands
@@ -297,3 +302,9 @@ Recommended: `<workspace>/data/agent.db` (or `<workspace>/clawd.db`)
 The same SQLite file can hold multiple tables (tasks, trades, observations) — or use separate databases per domain. Single file is simpler; multiple files provide isolation.
 
 Ensure the database path is in `.gitignore` — databases shouldn't be committed to git.
+# Legacy educational schema
+
+This file documents the bundled SQLite `task` scaffold for reference only. It is
+not the production task-authority recommendation. New deployments should use their
+existing shared authority (Cairn in the current reference environment) and should
+not create a second local task database without an explicit adapter plan.

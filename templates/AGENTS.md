@@ -4,14 +4,18 @@ This folder is home. Treat it that way.
 
 ## ⚡ RULE ZERO — Track Before You Work
 
-**Every time you're about to do something — ANYTHING — track it first.**
+**Every time you're about to do something — ANYTHING — track it first in the
+deployment's task authority.** The examples below use Cairn; if your deployment
+uses another system, document that adapter explicitly before adopting Rule Zero.
 ```
-task start "Title" "What's being requested" <category>
+cairn check "subject"
+cairn add "Title" --project <PROJECT> --type improvement --priority medium
 # ... do the work ...
-task update <id> done "What was accomplished"
+cairn done <REF> --resolution "What was accomplished" --kind fixed
 ```
 This applies to: bug fixes, config changes, creating files, running commands, EVERYTHING.
-If you catch yourself having already done work without tracking → `task done` IMMEDIATELY.
+If you catch yourself having already done work without tracking, add it to the task
+authority immediately and record the omission.
 
 **Why this exists:** Agents reliably forget to track work unless it's the absolute first instruction. Making it Rule Zero — literally the first thing in the file — is what works.
 
@@ -46,29 +50,19 @@ Capture what matters. Decisions, context, things to remember.
 
 ### ✅ Task Tracking — Track All Work
 
-Use the task CLI to track work:
+Use the configured task authority to track work. Cairn is one supported pattern:
 ```bash
-# Starting work
-task start "Fix dashboard bug" "Tab navigation breaks on reload" dashboard high
-
-# Completed something
-task done "Fixed null error" "Dashboard showing errors" "Added null check" dashboard
-
-# Planning future work
-task plan "Add feature X" "Description of what's needed" main
-
-# Update existing task
-task update <id> done "Completed successfully"
-
-# List tasks
-task list              # Recent 10
-task list done         # All done tasks
-task list in-progress  # Active work
+cairn check "dashboard bug"
+cairn add "Fix dashboard bug" --project <PROJECT> --type bug --priority high
+cairn claim <REF>
+cairn note <REF> "Investigating reload failure" --kind attempt
+cairn done <REF> --resolution "Added null guard and verified reload" --kind fixed
 ```
 
 **⚠️ ALWAYS include Input** (what was requested) — not just title and output!
 
-<!-- Customize categories to match your domains: main, dashboard, infrastructure, etc. -->
+<!-- Customize projects and labels to match your domains. Do not create a second
+     local task database if a shared task authority already exists. -->
 
 ### 📊 Feedback Tracking — Learn From Decisions
 When your human approves, rejects, or modifies a recommendation:

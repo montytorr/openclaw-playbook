@@ -2,6 +2,10 @@
 
 These are **minimal starter artifacts**, not production-ready drop-ins.
 
+> **Task note:** `scripts/task` is a legacy educational SQLite scaffold. It is not
+> the recommended authority for a new deployment; use the task system already in
+> operation and document an adapter if compatibility is required.
+
 **Repeat that to yourself before copying them into production.** They are educational scaffolds meant to prove the loop is executable.
 
 Use them to reduce blank-page friction:

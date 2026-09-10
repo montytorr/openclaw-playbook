@@ -43,7 +43,8 @@ Every sub-agent interaction follows this flow:
 Parent Session
     │
     ├── 1. Create a task (track the work BEFORE spawning)
-    │       task start "Build authentication module" "User requested login flow" coding
+    │       cairn add "Build authentication module" --project <PROJECT> --type feature --priority medium
+    │       cairn claim <REF>
     │
     ├── 2. Spawn sub-agent with clear task description
     │       sessions_spawn(task="...", mode="run", cwd="/path/to/project")
@@ -68,7 +69,8 @@ Parent Session
 
 ```bash
 # CORRECT: track first, spawn second
-task start "Refactor auth module" "Extract JWT logic into separate service" coding
+cairn add "Refactor auth module" --project <PROJECT> --type improvement --priority medium
+cairn claim <REF>
 # then spawn sub-agent
 
 # WRONG: spawn first, track maybe-later
@@ -293,7 +295,7 @@ A good rule of thumb: if the sub-agent's context load (bootstrap + task) costs m
 - [ ] Set up `delegation-audit` hook to log all sub-agent spawns
 - [ ] Set up `delegation-policy` hook to enforce spawn limits and tracked-parent-task requirements
 - [ ] Configure sub-agent depth limits in your security rules
-- [ ] Add task tracking discipline: always `task start` before `sessions_spawn`
+- [ ] Add task tracking discipline: check/claim the authoritative task before `sessions_spawn`
 - [ ] Build a verification checklist for sub-agent output (git diff, tests, file checks)
 - [ ] Set up cost monitoring for sub-agent sessions
 - [ ] Test parallel spawning with 2-3 independent tasks

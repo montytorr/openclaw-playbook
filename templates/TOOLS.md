@@ -39,12 +39,15 @@ Skills define *how* tools work. This file is for *your* specifics — the stuff 
 
 <!-- Quick reference for your custom scripts -->
 <!-- Example:
-- `scripts/task` — Task management CLI
+- `cairn` — shared task authority; check, claim, note, checkpoint, and close work
 - `scripts/status-report` — System health summary
 - `scripts/runtime-health` — Active runtime/auth health
 - `scripts/openclaw-update-safe` — Safe update wrapper that reapplies local runtime fixes
 - `scripts/integrity-check` — File integrity monitoring
 - `scripts/mem-search` — Observation database search
+
+Keep this file deployment-specific. Do not copy hostnames, node IDs, credentials,
+provider tokens, or assumptions from another installation.
 -->
 
 ## 🔑 Service Notes

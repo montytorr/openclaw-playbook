@@ -2,7 +2,7 @@
 
 An educational playbook for running an autonomous OpenClaw agent. Built from real operational patterns — battle-tested across months of 24/7 autonomous operation.
 
-**Current examples reflect a Codex-first OpenClaw 2026.6 production setup** with `gpt-5.5` as the primary model and `gpt-5.5-mini` as the stable fallback/routine-work lane. Optional fast lanes should be positively verified by a strong account-scoped signal before they are routed, and should not be placed in the hard fallback chain.
+**Curation status: reviewed 2026-09-10.** This is an operational playbook, not a frozen configuration dump. Model IDs, plugin names, CLI commands, and provider behavior change faster than prose; every version-sensitive example is a placeholder or must be verified against the target installation before use.
 
 ## Who This Is For
 
@@ -29,6 +29,7 @@ Experienced developers who:
 - **Verification scripts** — bundled starter checks for integrity, memory readiness, generic smoke tests, brownfield checks, and full local rollout validation
 - **Brownfield extras** — adapter scaffolds, migration case studies, and verifiers for active-workspace adoption
 - **GitHub Actions CI** — a minimal verify workflow for push + pull_request
+- **Curation guardrails** — what is normative, what is illustrative, and how to revalidate the playbook after runtime changes
 
 ## What You Don't Get
 
@@ -62,8 +63,9 @@ chmod +x setup.sh
 # Or bootstrap headlessly / in CI
 ./setup.sh --workspace /tmp/clawd --non-interactive --skip-commit
 
-# Start reading
-# The playbook is ordered — read chapters 00 through 17 sequentially
+# Start with the operator map, then choose the chapters that match your deployment.
+# Do not apply every chapter mechanically.
+sed -n '1,240p' docs/maintenance-and-drift.md
 ```
 
 ## Structure

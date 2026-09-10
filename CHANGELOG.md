@@ -4,6 +4,14 @@ All notable changes to this project should be documented in this file.
 
 This changelog uses a lightweight Keep a Changelog style and is intentionally human-written.
 
+## [0.8.0] - 2026-09-10
+
+### Changed
+- Curated runtime-sensitive guidance and removed the claim that April 2026 model IDs are current.
+- Made the task-authority contract explicit; Cairn is the reference workflow and the local `task` CLI is educational legacy material.
+- Added drift-maintenance guidance and clarified normative versus illustrative content.
+- Updated starter templates so they do not silently create a second task system.
+
 ## [Unreleased]
 
 ### Added
@@ -20,11 +28,11 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 - Gateway guard guidance now disables health-only restarts by default, treats status timeouts as unknown activity, avoids active-work grace restarts, and sizes service memory caps for hook sidecar bursts.
 - Gateway guard guidance now requires persistent unhealthy state before health-only restarts, avoiding false-positive Discord interruption notices from a single `/health` timeout.
 - Operator validation now checks gateway `/health`, service cgroup memory, Discord channel audit, and stale restart-recovery tasks.
-- README and chapter cross-references now include the operator hardening layer and OpenClaw 2026.6 runtime posture.
+- README and chapter cross-references now include the operator hardening layer and a release-neutral runtime posture.
 - Cron, config, and infrastructure chapters now document the June production lessons around deterministic host cron, single-profile Codex OAuth hygiene, and live UFW/Docker bridge verification.
 - README now points contributors at changelog upkeep as part of normal release hygiene.
 - Release hygiene guidance now documents lightweight semver-style bumps for the repo.
-- Updated current Codex routing examples to the OpenClaw 2026.6 line: `gpt-5.5` primary with `gpt-5.5-mini` as fallback/routine-work lane.
+- Updated model-routing examples to use verified, release-neutral placeholders rather than stale model IDs.
 - Removed stale optional-fast-lane-as-current-example guidance; fast lanes are now documented only as verified, account-scoped additions outside the hard fallback chain.
 - Expanded configuration and script guidance so Codex runtime health, auth-bridge drift, and approval-policy intent are documented as operational concerns rather than implied implementation details.
 - Expanded the local rollout case study with runtime-drift lessons from a real Codex runtime hardening pass.
