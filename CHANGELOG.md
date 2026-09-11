@@ -4,6 +4,17 @@ All notable changes to this project should be documented in this file.
 
 This changelog uses a lightweight Keep a Changelog style and is intentionally human-written.
 
+## [Unreleased]
+
+## [0.8.1] - 2026-09-11
+
+### Added
+- Documented bounded memory caches, selective session indexing, serialized health probes, repeated validation, and recovery from session-store pressure.
+- Added canonical-root and mirror-integrity reconciliation guidance for multi-root OpenClaw workspaces.
+
+### Changed
+- Expanded operator hardening validation for gateway health, service cgroup memory, Discord audit, and stale restart-recovery tasks.
+
 ## [0.8.0] - 2026-09-10
 
 ### Changed
@@ -11,8 +22,6 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 - Made the task-authority contract explicit; Cairn is the reference workflow and the local `task` CLI is educational legacy material.
 - Added drift-maintenance guidance and clarified normative versus illustrative content.
 - Updated starter templates so they do not silently create a second task system.
-
-## [Unreleased]
 
 ### Added
 - Gateway hardening details for service-cgroup memory, `/health` probing, and Discord restart-recovery cleanup after wedged gateway sessions.
