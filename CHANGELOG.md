@@ -25,6 +25,11 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 - Stronger validation guidance for Codex runtime health and post-update verification.
 
 ### Changed
+- Added runtime-readiness guidance for bounded memory caches, selective session
+  indexing, serialized health probes, repeated memory validation, and recovery from
+  session-store pressure.
+- Added explicit multi-root integrity reconciliation guidance for canonical roots,
+  byte-identical mirrors, and protected-file baselines.
 - Gateway guard guidance now disables health-only restarts by default, treats status timeouts as unknown activity, avoids active-work grace restarts, and sizes service memory caps for hook sidecar bursts.
 - Gateway guard guidance now requires persistent unhealthy state before health-only restarts, avoiding false-positive Discord interruption notices from a single `/health` timeout.
 - Operator validation now checks gateway `/health`, service cgroup memory, Discord channel audit, and stale restart-recovery tasks.

@@ -37,6 +37,32 @@ The memory system solves the continuity problem with four layers:
 
 Together, these create a system where no important context is permanently lost, even across hundreds of sessions.
 
+## Runtime Readiness: Keep Retrieval Off the Hot Path
+
+Memory correctness is not enough. A memory stack that eventually returns the right
+answer but blocks the gateway for a minute is an availability incident.
+
+Use these guardrails in production:
+
+- **Bound the active cache/index** with the same cap used by the health checker. A
+  checker that assumes 10,000 entries while the runtime permits 50,000 will report
+  the wrong state; a runtime with no bound can grow without an operational budget.
+- **Do not index the full session transcript store by default.** Session history is
+  useful for archival recall, but bulk indexing couples every session write to
+  semantic search. Keep the live memory corpus selective and add transcript
+  indexing only when its latency and resource cost are measured.
+- **Serialize expensive probes.** A deep status check and a semantic search should
+  not overlap with another copy of themselves. Use a lock or single-flight guard,
+  and give each operation an explicit deadline.
+- **Prove repeatability.** One successful cold run is not health evidence. Run the
+  complete memory check twice, record cache size/cap and search duration, and pair
+  it with a gateway liveness check.
+
+When memory checks time out, inspect session-store size, transcript indexing,
+concurrent health jobs, and gateway event-loop stalls before changing retrieval
+thresholds. A larger cap can fix a false-positive guard, but it cannot fix
+contention or an unbounded hot path.
+
 ## The Bigger Framing: This Is Your LLM Wiki
 
 Don't undersell this as "some notes plus a database." The durable memory stack is the foundation of an **LLM wiki**.

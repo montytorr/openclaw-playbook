@@ -137,6 +137,28 @@ Useful guardrails:
 
 Do not blindly delete active transcripts. Archive first, prune only stale metadata, and log counts.
 
+## Memory Health Under Session Pressure
+
+Memory timeouts can be a secondary symptom of session-store pressure rather than a
+broken embedding or search backend. Large transcript databases, synchronous session
+writes, and overlapping deep probes can block the gateway event loop long enough to
+make Discord look dead.
+
+Recovery and prevention pattern:
+
+1. Measure the session-store size, indexed-entry count, write latency, and gateway
+   event-loop/health latency.
+2. Stop duplicate probes and background jobs that are querying the same memory path.
+3. Keep transcript indexing out of the live memory path unless it has a measured
+   resource budget; archive transcripts for selective or offline recall instead.
+4. Align the runtime cache/index cap with the cap enforced by the health check.
+5. Run one clean deep check, then a repeat, and verify gateway/channel liveness
+   after both passes.
+
+Record the timings and counts with the incident. “The command eventually finished”
+is not a stable health signal if it routinely consumes the gateway's responsiveness
+budget.
+
 ## Cron Runtime Hygiene
 
 Agent-backed cron jobs are useful for work that needs reasoning. They are a bad place for high-frequency deterministic checks.
@@ -234,6 +256,17 @@ Expected:
 - Discord channel status is connected and audit-clean if Discord is part of the deployment
 - deterministic watchdogs exit silently on success
 - no duplicate OpenClaw cron still performs the same host-level check
+
+For multi-root workspaces, also verify the integrity contract:
+
+- designate one runtime-canonical root
+- compare compatibility mirrors byte-for-byte for every mirrored instruction file
+- verify the protected-file hash baseline, including protected files that are not
+  safe to print
+- run the repository integrity checker after reconciliation
+
+The baseline proves content integrity; the mirror comparison proves that the agent
+will receive the same instructions regardless of which supported root is loaded.
 
 ## What To Build
 

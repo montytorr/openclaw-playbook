@@ -257,6 +257,31 @@ Expected:
 - message reads complete without hanging
 - no stale restart-recovery tasks are still running for Discord sessions
 
+## 14. Repeat memory health and reconcile mirrors
+
+Treat a deep memory check as a timed runtime probe, not a one-time command. Run the
+same complete health command twice, without launching overlapping copies. Record:
+
+- cache/index entries and configured cap
+- semantic-search duration for each pass
+- gateway `/health` or equivalent liveness result
+- channel status if the gateway serves chat
+
+Both passes should complete within the operator-defined deadline. If they do not,
+inspect session-store pressure and transcript indexing before increasing thresholds.
+
+If the workspace has compatibility roots, finish the rollout with an integrity
+reconciliation:
+
+```bash
+cmp -s /path/to/runtime-root/AGENTS.md /path/to/mirror-root/AGENTS.md
+reference/scripts/integrity-check check
+```
+
+Repeat `cmp` for every mirrored instruction file. The expected result is a clean
+protected-file baseline and byte-identical mirrors; do not print protected file
+contents or hashes into shared logs.
+
 ## CI
 
 GitHub Actions workflow: `.github/workflows/verify.yml`
