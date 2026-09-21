@@ -6,6 +6,11 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-09-21
+
+### Removed
+- Retired the obsolete Obsidian sync integration and its dedicated operational guidance; Cairn is now the system of record.
+
 ## [0.9.0] - 2026-09-21
 
 ### Added
