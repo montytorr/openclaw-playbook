@@ -36,7 +36,7 @@ Do this before you copy a single template file.
   - SQLite CLI, REST API, Linear sync, GitHub Issues bridge, or something else?
   - Decide whether OpenClaw should call it directly, wrap it, or replace it later.
 - [ ] **Existing memory corpus?**
-  - Daily notes, Obsidian vault, Slack exports, issue comments, postmortems, changelogs?
+  - Daily notes, document stores, Slack exports, issue comments, postmortems, changelogs?
   - Identify what is signal vs bootstrap/greeting/noise.
 - [ ] **Existing hooks/plugins?**
   - What already intercepts commands, messages, or session startup?
@@ -111,7 +111,7 @@ Create a migration note such as:
 - Dashboard reads SQLite directly
 
 ## Existing memory sources
-- Obsidian vault (high signal)
+- Curated document store (high signal)
 - Discord export (mixed signal)
 - bootstrap notes from initial install (low signal)
 
