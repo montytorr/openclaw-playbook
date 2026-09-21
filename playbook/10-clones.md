@@ -116,7 +116,7 @@ The publish step:
 1. Connects to the target (local copy or SSH)
 2. Copies packaged files to the target workspace
 3. Verifies integrity after copy
-4. Optionally triggers a gateway restart on the target
+4. Optionally requests a guarded/deferred gateway restart on the target
 
 ### What to Share, What to Keep Unique
 

@@ -6,6 +6,21 @@ This changelog uses a lightweight Keep a Changelog style and is intentionally hu
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-21
+
+### Added
+- Documented the production A2A reactor contract: confirmation before consumption, event-driven wakeups with recovery sweeps, serialized runs, retained-failure alerts, explicit review handoffs, turn budgets, terminal-event suppression, and linked task reconciliation on contract closure.
+- Added guarded gateway restart guidance with deferred requests, bounded active-run fences, debounce behavior, operator overrides, and post-restart ownership/health acceptance checks.
+- Added privilege-boundary guidance for privileged agents working near human-owned repositories, including cheap Git write probes and ownership-drift monitoring.
+- Added GitHub release, CI, and license badges to the project landing page.
+
+### Changed
+- Replaced the stale configuration template with a provider-neutral example that validates against the OpenClaw 2026.9.2 schema (`agents.entries`, `memory.search`, object-form hooks, loopback gateway binding, and current plugin slots).
+- Scoped memory guidance to canonical notes by default and made private/main-session recall boundaries explicit.
+- Updated security guidance so isolated A2A workers are the default for substantive work without falsely requiring a fresh worker for every routine protocol event.
+- Replaced direct in-turn gateway restart instructions with a guarded, deferred restart path for chat-critical hosts.
+- Updated curation and release hygiene to require live config validation, a pushed version tag, and a published GitHub release.
+
 ## [0.8.1] - 2026-09-11
 
 ### Added

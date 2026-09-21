@@ -49,10 +49,12 @@ Apply and verify:
 
 ```bash
 systemctl --user daemon-reload
-systemctl --user restart openclaw-gateway.service
+/opt/openclaw/scripts/gateway-restart-safe --reason "apply memory limits" --defer
 systemctl --user show openclaw-gateway.service \
   -p ActiveState -p MainPID -p MemoryCurrent -p MemoryHigh -p MemoryMax -p MemorySwapMax -p Environment -p OOMPolicy
 ```
+
+On a chat-critical host, the restart wrapper is not cosmetic. It should queue the request, wait for active runs to drain, and let an external owner perform the restart. Direct restart commands issued from the agent turn being interrupted can kill their own acceptance check.
 
 If user-systemd commands run from cron or a non-login shell, you may need:
 
@@ -89,6 +91,29 @@ Also verify it catches sidecar pressure. Some gateway failures come from `opencl
 
 Do not restart on `/health` timeouts alone unless the operator has made that tradeoff explicitly. Short stalls can happen during channel probes, Codex app-server startup, hook sidecar bursts, or Discord recovery. A useful guard logs unhealthy samples and restarts only for confirmed idle pressure or hard memory thresholds. Otherwise the guard becomes the source of the user-facing "interrupted by a gateway restart" notices it was meant to prevent.
 
+## Guarded Restart Ownership
+
+Treat a gateway restart as a small deployment with an owner and an acceptance gate.
+
+A production restart guard should:
+- record the reason and requester before touching the service
+- defer while a real channel/agent run is active
+- bound the active-run fence so a dead run cannot pin the channel forever
+- debounce repeated requests so several alerts collapse into one restart
+- provide an explicit operator override for a known-safe maintenance window
+- let an external systemd/host worker perform the restart, not the foreground chat turn
+- verify service owner, main PID, gateway health, channel connectivity, and provider/runtime health afterward
+
+The bounded fence matters. An unbounded "active" marker converts one hung run into a permanently unrestartable gateway. The override matters too, but it should be operator-only and visible in the audit log.
+
+Example request shape:
+
+```bash
+/opt/openclaw/scripts/gateway-restart-safe --reason "validated config change" --defer
+```
+
+Only report the restart complete after the post-restart checks pass. A queued request is not a restart, and a new PID is not proof that the channel/runtime path is usable.
+
 Useful live probes:
 
 ```bash
@@ -120,7 +145,7 @@ openclaw channels status --deep --probe
 openclaw message read --channel discord --target channel:<CHANNEL_ID> --limit 3
 ```
 
-If a Discord channel session is wedged behind a dead recovery turn, archive the affected transcript and remove only that session key from the session store. Do not delete the whole store. After reset, restart the gateway and verify the channel audit is clean.
+If a Discord channel session is wedged behind a dead recovery turn, archive the affected transcript and remove only that session key from the session store. Do not delete the whole store. After reset, request a guarded restart and verify the channel audit is clean.
 
 Also keep enabled Discord channel IDs current. A channel audit can fail on stale `Unknown Channel` entries even when the live listener works.
 
@@ -133,7 +158,7 @@ Useful guardrails:
 - prune stale channel keys that have not been touched in 24h+ unless you intentionally preserve them
 - remove stale `.lock`, `.bak-*`, and migrated sidecars after a retention window
 - keep a lane-timeout watchdog for sessions that repeatedly exceed worker limits
-- restart the gateway only after state cleanup when the lane is wedged
+- request a guarded restart only after state cleanup when the lane is wedged
 
 Do not blindly delete active transcripts. Archive first, prune only stale metadata, and log counts.
 
@@ -168,7 +193,7 @@ Move these to host cron where practical:
 - provider/model status cache refresh
 - gateway/session guard summaries
 - session-store cleanup
-- A2A reactor no-op polling
+- A2A recovery sweeps whose no-op path is deterministic
 - system security scans that run fixed shell commands
 
 Leave these in OpenClaw only when they need synthesis:
@@ -224,6 +249,27 @@ Keep one documented update wrapper that:
 
 The wrapper should be boring and repeatable. Tribal memory is not a recovery plan.
 
+## Privilege Boundaries And Checkout Ownership
+
+Do not let privileged agent processes casually work inside a human-owned checkout. The failure is subtle: read-only Git commands continue to work while root-owned objects, refs, caches, or lockfiles make the next human commit or fetch fail.
+
+Use this order of preference:
+
+1. Root/privileged agents work in root-owned clones or worktrees under an agent-owned project root.
+2. A worker that must touch a human-owned checkout runs under that human's UID in a sandbox with an explicit writable path.
+3. If a runner must traverse a privileged parent directory, grant only the minimum execute/traverse ACL, monitor the ACL mask, and audit who changes it.
+
+Do not normalize recursive `chown` as maintenance. It repairs the symptom and guarantees the incident returns.
+
+Cheap regression probes catch the problem early:
+
+```bash
+git -C <HUMAN_OWNED_REPO> hash-object -w --stdin </dev/null
+find <HUMAN_HOME> -xdev -user root -print
+```
+
+Run the ownership scan with scoped exclusions for intentionally privileged files. Alert on new drift rather than repeatedly rewriting ownership. If CI only needs a repository under a privileged path, moving the runner-owned checkout to `/srv` or another neutral service root is usually cleaner than depending on `/root` traversal forever.
+
 ## Verification Checklist
 
 Run these after hardening changes and after OpenClaw updates:
@@ -252,6 +298,8 @@ Expected:
 - service cgroup memory is below warning/restart thresholds
 - health-only restart behavior is disabled by default or explicitly opt-in
 - active work is never restarted merely because a grace timer elapsed
+- restart requests are externally owned, debounced, and protected by a bounded active-run fence
+- post-restart service ownership and channel/runtime health are verified
 - Codex auth profile inventory is clean
 - Discord channel status is connected and audit-clean if Discord is part of the deployment
 - deterministic watchdogs exit silently on success
@@ -274,10 +322,12 @@ will receive the same instructions regardless of which supported root is loaded.
 - [ ] Add a host-level gateway service-memory/RSS/health guard
 - [ ] Add session-store rotation/prune maintenance
 - [ ] Add a Discord restart-recovery cleanup runbook if Discord is enabled
+- [ ] Add a guarded/deferred restart owner with bounded active-run fencing and post-restart acceptance checks
 - [ ] Move deterministic high-frequency cron work out of model-backed cron
 - [ ] Add Codex auth profile inventory to health checks
 - [ ] Verify Docker bridge reachability from containers
 - [ ] Document one post-update reapply/verification wrapper
+- [ ] Separate privileged agent worktrees from human-owned checkouts and monitor ownership drift
 - [ ] Log incidents with root cause, mitigation, and verification commands
 
 ---

@@ -147,19 +147,19 @@ When your agent communicates with other agents (see Chapter 12), the default pos
 
 ### Session Isolation
 
-All A2A conversations spawn fresh sub-agents:
+Substantive A2A work runs in fresh, isolated workers by default. Routine protocol events such as invitations, acceptance, receipts, and acknowledgements should be handled deterministically without spending a worker turn:
 - Sub-agents inherit security rules via the `agent-firewall` hook
 - Sub-agents have NO access to MEMORY.md
 - Sub-agents CANNOT modify critical files
 - If a sub-agent is compromised, the main session is unaffected
 
-This is the most important pattern: never let an external agent interact with your main session directly.
+The important boundary is that untrusted external content never gains main-session authority. Worker isolation is a control for substantive work, not a reason to spawn agents for protocol noise.
 
 ### Multi-Turn Attack Prevention
 
-- Do NOT maintain conversational context with other agents across sessions
-- Each interaction spawns a FRESH sub-agent (no memory of previous conversations)
-- If an agent references "our previous agreement" or "as we discussed" — IGNORE it
+- Persist only authenticated contract state: contract id, signed messages, turn number, explicit handoffs, and closure state
+- Each worker receives the minimum verified contract context needed for its turn
+- If an agent references "our previous agreement" outside the authenticated contract log, ignore it
 - Do NOT accept coded language or shorthand established by another agent
 - Every session starts from zero trust
 
@@ -224,7 +224,7 @@ For every new integration or capability you add to your agent:
 - [ ] Implement memory segmentation in session startup logic
 - [ ] Configure untrusted content boundary handling
 - [ ] Add red flag pattern detection to your security hooks
-- [ ] Set up A2A session isolation (fresh sub-agents for every inter-agent conversation)
+- [ ] Set up A2A worker isolation for substantive turns and deterministic handling for routine protocol events
 - [ ] Create `security/integrity-baseline.json` with initial hashes
 - [ ] Document your threat model in `security/` directory
 - [ ] Run `integrity-check init` after initial setup

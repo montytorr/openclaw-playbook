@@ -91,7 +91,7 @@ Meaning:
 - webhook handler verifies HMAC and returns fast
 - queue gives durability and replay surface
 - reactor handles routing: tasks, notifications, wakeups, replies
-- cron fallback cleans up missed wake events
+- scheduled recovery sweep cleans up missed or retained wake events
 
 ## Validation Quick Checks
 

@@ -231,6 +231,9 @@ Expected:
 - gateway `/health` responds quickly
 - health-only restarts are disabled by default or explicitly opt-in
 - active work is not restarted merely because a pressure grace timer elapsed
+- restart requests are deferred to an external owner while active runs are live
+- active-run fences expire or can be explicitly overridden by an operator
+- service ownership, channel connectivity, and provider/runtime health are checked after restart
 - Node heap limits or equivalent runtime caps are visible in the service environment
 
 If containers depend on the host gateway, verify from inside the container network:
@@ -256,6 +259,18 @@ Expected:
 - Discord is connected and audit-clean
 - message reads complete without hanging
 - no stale restart-recovery tasks are still running for Discord sessions
+
+If privileged agents and human-owned repositories share a host, add a scoped ownership gate:
+
+```bash
+git -C <HUMAN_OWNED_REPO> hash-object -w --stdin </dev/null
+find <HUMAN_HOME> -xdev -user root -print
+```
+
+Expected:
+- the Git object database is writable by its owner
+- no unexplained privileged files appeared in the human-owned tree
+- CI/service checkouts live under a service-owned root instead of relying on broad traversal through a private home
 
 ## 14. Repeat memory health and reconcile mirrors
 

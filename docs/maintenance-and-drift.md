@@ -24,8 +24,9 @@ changes:
 ```bash
 # Use the installation's help if a command differs.
 openclaw --help
+openclaw config validate
 openclaw memory status --deep
-git grep -n -i 'task start\|task update\|scripts/task\|linear\|gpt-5\.5\|gpt-5\.5-mini'
+git grep -n -i 'task start\|task update\|scripts/task\|linear\|memorySearch\|agents.*list\|openclaw gateway restart\|gpt-5\.5\|gpt-5\.5-mini'
 ./reference/scripts/verify
 ```
 
@@ -70,6 +71,7 @@ stored credential is invalid.
 ## Release checklist
 
 - [ ] runtime-sensitive claims are dated or provider-neutral
+- [ ] the example config validates against the installed OpenClaw schema
 - [ ] no dead task CLI is in the main path
 - [ ] templates and chapters agree
 - [ ] setup is idempotent and does not overwrite user files
@@ -77,3 +79,5 @@ stored credential is invalid.
 - [ ] links and shell snippets were inspected
 - [ ] `VERSION` and `CHANGELOG.md` were updated
 - [ ] the change was committed and pushed
+- [ ] a version tag was pushed and a GitHub release was published from the matching changelog section
+- [ ] the GitHub repository description still matches the current scope

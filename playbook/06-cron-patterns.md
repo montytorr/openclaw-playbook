@@ -271,7 +271,7 @@ Good candidates for host cron:
 - refresh cached provider/model status
 - inspect runtime health and log anomalies
 - prune stale session sidecars and oversized artifacts
-- run deterministic A2A reactor polling when the no-op path can exit without a model
+- run an A2A recovery sweep when the event-driven wake path may have missed or retained work
 - verify Docker containers and bridge reachability
 - monitor gateway RSS and restart cleanly before the kernel OOM killer gets involved
 
@@ -285,7 +285,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 */10 * * * * root /opt/openclaw/scripts/cron-runtime-watchdog >> /var/log/openclaw/monitors.log 2>&1 || true
 ```
 
-Design rule: if the success path is "nothing to say", it probably should not spend a model turn.
+Design rule: if the success path is "nothing to say", it probably should not spend a model turn. For webhook-driven systems, the scheduled job should be a recovery sweep, not the primary trigger, and both paths should share one cross-process lock.
 
 Cross-reference: see [Chapter 17](17-operator-hardening.md) for gateway memory guards and session-store pressure control.
 

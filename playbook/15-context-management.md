@@ -117,19 +117,12 @@ The decision's reasoning is the first thing compaction strips. The conclusion mi
 
 ## Bootstrap Files
 
-Bootstrap files are loaded into every session as project context. They're specified in `openclaw.json`:
+Known workspace bootstrap files are loaded into sessions as project context. Current OpenClaw releases discover the standard files from the agent workspace; use the installed schema rather than inventing a `bootstrapFiles` list.
 
 ```json
 {
   "agents": {
     "defaults": {
-      "bootstrapFiles": [
-        "AGENTS.md",
-        "SOUL.md",
-        "IDENTITY.md",
-        "USER.md",
-        "TOOLS.md"
-      ],
       "bootstrapMaxChars": 20000,
       "bootstrapTotalMaxChars": 50000
     }
@@ -139,8 +132,8 @@ Bootstrap files are loaded into every session as project context. They're specif
 
 ### What These Limits Mean
 
-- **`bootstrapMaxChars`** — maximum characters per individual file. If TOOLS.md is 25,000 chars, only the first 20,000 load (with a truncation warning).
-- **`bootstrapTotalMaxChars`** — maximum total characters across all bootstrap files. If your five files total 60,000 chars, the last files get truncated.
+- **`bootstrapMaxChars`** — maximum characters per individual discovered bootstrap file. If TOOLS.md is 25,000 chars, only the first 20,000 load (with a truncation warning).
+- **`bootstrapTotalMaxChars`** — maximum total characters across discovered bootstrap files. If the files total 60,000 chars, later content gets truncated.
 
 ### Why Limits Matter
 

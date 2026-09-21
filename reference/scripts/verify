@@ -4,7 +4,9 @@
 Repo-local verification for the playbook reference artifacts.
 """
 
+import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -36,6 +38,13 @@ def expect_exit_code(cmd, code, env=None):
 def main():
     run(["bash", "-n", "setup.sh"])
     run([sys.executable, "-m", "py_compile", "reference/scripts/task", "reference/scripts/mem-extract", "reference/scripts/mem-search", "reference/scripts/verify"])
+
+    example_config = REPO / "templates" / "openclaw.example.json"
+    json.loads(example_config.read_text())
+    if shutil.which("openclaw"):
+        config_env = dict(ENV)
+        config_env["OPENCLAW_CONFIG_PATH"] = str(example_config)
+        run(["openclaw", "config", "validate"], env=config_env)
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)

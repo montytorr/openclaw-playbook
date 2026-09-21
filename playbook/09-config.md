@@ -37,28 +37,26 @@ The main configuration file lives at `~/.openclaw/openclaw.json` (or wherever yo
       "subagents": {
         "thinking": "off"
       },
-      "bootstrapFiles": [
-        "AGENTS.md",
-        "SOUL.md",
-        "IDENTITY.md",
-        "USER.md",
-        "TOOLS.md"
-      ],
       "bootstrapMaxChars": 20000,
       "bootstrapTotalMaxChars": 50000
     },
-    "list": [
-      {
-        "id": "main",
-        "name": "Your Agent"
+    "entries": {
+      "main": {
+        "workspace": "/absolute/path/to/workspace",
+        "model": {
+          "primary": "<PROVIDER>/<PRIMARY_MODEL>",
+          "fallbacks": ["<PROVIDER>/<ROUTINE_MODEL>"]
+        }
       }
-    ]
+    },
+    "ownership": "explicit"
   }
 }
 ```
 
 Key decisions:
-- **One agent per instance** — keep it simple. One `main` agent per OpenClaw installation.
+- **One main agent first** — keep the initial deployment simple, then add explicit specialist entries only when their workspace, channel binding, and memory boundary are genuinely different.
+- **Explicit ownership** — bind channels to the intended agent rather than relying on historical default routing.
 - **Bootstrap files** — these are injected into every session as project context. Order matters (most important first).
 - **Bootstrap size limits** — prevent massive files from consuming the entire context window.
 
@@ -71,22 +69,31 @@ A practical baseline looks like this:
 
 ```json
 {
-  "memorySearch": {
-    "provider": "local",
-    "fallback": "none",
-    "sources": ["memory", "sessions"]
+  "memory": {
+    "search": {
+      "enabled": true,
+      "provider": "local",
+      "fallback": "none",
+      "sources": ["memory"],
+      "experimental": {
+        "sessionMemory": false
+      },
+      "rememberAcrossConversations": false
+    }
   }
 }
 ```
 
 What this gets you:
 - local embeddings/vector/FTS-backed retrieval
-- `memory/*.md` and indexed session history as search sources
+- canonical `MEMORY.md`, `memory/*.md`, and selected extra paths as search sources
 - fewer migration traps than older bolt-on memory stacks
 
 Operationally:
 - verify health with `openclaw memory status --deep`
 - keep `MEMORY.md` as a digest, not the primary search engine
+- start with `sources: ["memory"]`; add transcript/session recall only after measuring its storage, latency, retention, and privacy cost
+- expose memory search only to the main/private agent path unless a specialist has an explicit, least-privilege corpus
 - treat dreaming as optional synthesis on top of retrieval, not a substitute for retrieval itself
 
 ### Model Configuration
@@ -95,21 +102,10 @@ Choose providers based on current support and account health. Do not encode a
 provider migration or OAuth claim as a universal rule; verify it for the installed
 release and document the tested fallback path.
 
-A solid Codex setup looks like this:
+A solid provider-neutral model setup looks like this:
 
 ```json
 {
-  "auth": {
-    "profiles": {
-      "openai-codex:default": {
-        "provider": "openai-codex",
-        "mode": "oauth"
-      }
-    },
-    "order": {
-      "openai-codex": ["openai-codex:default"]
-    }
-  },
   "agents": {
     "defaults": {
       "model": {
@@ -130,7 +126,10 @@ A solid Codex setup looks like this:
     }
   },
   "plugins": {
-    "allow": ["discord", "browser", "openai", "quota-aware-codex-router", "diagnostics-otel", "codex"],
+    "allow": ["discord", "browser", "openai", "memory-core", "diagnostics-otel", "codex"],
+    "slots": {
+      "memory": "memory-core"
+    },
     "entries": {
       "codex": {
         "enabled": true,
@@ -140,20 +139,21 @@ A solid Codex setup looks like this:
           }
         }
       },
-      "quota-aware-codex-router": {
-        "enabled": true,
-        "config": {}
+      "memory-core": {
+        "enabled": true
       },
       "diagnostics-otel": {
         "enabled": true,
-        "config": {
-          "otlpHttpEndpoint": "http://127.0.0.1:4318/v1"
-        }
+        "config": {}
       }
     }
   }
 }
 ```
+
+Current releases keep OTEL exporter settings under top-level `diagnostics.otel` (for example `endpoint: "http://127.0.0.1:4318"`) while the bundled plugin entry remains enabled with an empty config object. Validate this against the installed schema; older releases used different plugin-local keys.
+
+Configure provider authentication with the installed release's setup/config helpers and protected secret store. Do not cargo-cult an old provider profile name into a new runtime: provider IDs and OAuth ownership have changed across releases.
 
 If you use OpenClaw native memory, do **not** keep stale legacy memory aliases in `plugins.allow` just to make old docs happy. Prefer the native memory stack and, if needed, bind the memory slot to `memory-core` instead of carrying a dead plugin name forever.
 
@@ -345,9 +345,7 @@ Each channel type (Discord, Telegram, Slack) has its own configuration block. Ke
     "entries": {
       "diagnostics-otel": {
         "enabled": true,
-        "config": {
-          "otlpHttpEndpoint": "http://127.0.0.1:4318/v1"
-        }
+        "config": {}
       }
     }
   }
@@ -356,52 +354,14 @@ Each channel type (Discord, Telegram, Slack) has its own configuration block. Ke
 
 Hook paths are relative to the workspace. Register hooks in priority order, security hooks first. For LLM telemetry, prefer the bundled `diagnostics-otel` plugin over a workspace `llm-observer` hook.
 
-### Cron Configuration
+### Automation Configuration
 
 ```json
-{
-  "cron": {
-    "jobs": [
-      {
-        "id": "morning-brief",
-        "name": "Morning Briefing",
-        "enabled": true,
-        "schedule": {
-          "kind": "cron",
-          "expr": "30 8 * * 1-5",
-          "tz": "<YOUR_TIMEZONE>"
-        },
-        "sessionTarget": "isolated",
-        "payload": {
-          "kind": "agentTurn",
-          "message": "Generate morning briefing...",
-          "model": "<PROVIDER>/<PRIMARY_MODEL>",
-          "thinking": "medium",
-          "timeoutSeconds": 600
-        },
-        "delivery": {
-          "mode": "announce",
-          "channel": "<CHANNEL_ID>"
-        }
-      },
-      {
-        "id": "heartbeat",
-        "name": "Heartbeat",
-        "enabled": true,
-        "schedule": {
-          "kind": "cron",
-          "expr": "*/30 * * * *"
-        },
-        "sessionTarget": "main",
-        "payload": {
-          "kind": "systemEvent",
-          "text": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
-        }
-      }
-    ]
-  }
-}
+openclaw cron list --json
+openclaw cron add --help
 ```
+
+Current OpenClaw releases manage automations through the Gateway rather than a `cron.jobs` block in `openclaw.json`. Use the installed CLI/schema as authority, inspect the created job, and run it once before trusting its schedule. Keep deterministic shell checks in host cron or systemd; use OpenClaw automations only when a model turn, agent context, or channel delivery is required.
 
 If you migrate providers, do the cleanup properly:
 - remove the old auth profile and provider order
@@ -417,22 +377,21 @@ Cross-reference: see Chapter 6 for cron patterns and the heartbeat vs cron decis
 
 ```json
 {
-  "messages": {
-    "tts": {
-      "provider": "elevenlabs",
-      "voice": "<YOUR_VOICE_ID>",
-      "model": "eleven_multilingual_v2",
-      "auto": "inbound",
-      "fallback": {
-        "provider": "openai",
-        "voice": "fable"
+  "tts": {
+    "auto": "inbound",
+    "provider": "elevenlabs",
+    "providers": {
+      "elevenlabs": {
+        "apiKey": "<YOUR_KEY_HERE>",
+        "modelId": "<YOUR_TTS_MODEL_ID>",
+        "speakerVoiceId": "<YOUR_VOICE_ID>"
       }
     }
   }
 }
 ```
 
-TTS (text-to-speech) lets your agent respond with voice messages. The `auto: "inbound"` setting means the agent automatically replies with audio when the human sends a voice message.
+TTS (text-to-speech) lets your agent respond with voice messages. The `auto: "inbound"` setting means the agent automatically replies with audio when the human sends a voice message. Store the provider key through the host's protected config/secret workflow rather than committing the placeholder shape.
 
 ### Plugin Configuration
 
@@ -440,18 +399,16 @@ TTS (text-to-speech) lets your agent respond with voice messages. The `auto: "in
 {
   "plugins": {
     "entries": {
-      "device-pair": {
+      "memory-core": {
         "enabled": true,
-        "config": {
-          "publicUrl": "https://your-gateway-url.com"
-        }
+        "config": {}
       }
     }
   }
 }
 ```
 
-Plugins extend OpenClaw's capabilities. The `device-pair` plugin enables companion device connections (see Chapter 11). For telemetry, enable the bundled `diagnostics-otel` plugin and send OTLP to a local collector instead of relying on a custom workspace `llm-observer` hook.
+Plugins extend OpenClaw's capabilities. Use `plugins.slots.memory` to select the installed memory implementation instead of relying on a historical plugin alias. For telemetry, enable the bundled `diagnostics-otel` plugin and configure the exporter under top-level `diagnostics.otel`.
 
 ## Environment Variables
 
@@ -512,14 +469,17 @@ Add complexity incrementally. A config with 17 hooks and 20 cron jobs didn't hap
 # Validate config syntax
 cat ~/.openclaw/openclaw.json | python3 -m json.tool
 
-# Restart gateway to apply changes
-openclaw gateway restart
+# Validate against the installed release
+openclaw config validate
+
+# On a chat-critical host, request a guarded/deferred restart
+/opt/openclaw/scripts/gateway-restart-safe --reason "validated config change" --defer
 
 # Check gateway logs for errors
 openclaw gateway logs
 ```
 
-Always validate JSON syntax before restarting. A syntax error in `openclaw.json` can prevent the gateway from starting.
+Always validate against the installed schema before restarting. Valid JSON can still contain retired keys. On a chat-critical host, do not let an agent call `openclaw gateway restart` directly during an active run; use an operator-owned guard that can defer until the channel is quiet, then verify the resulting service owner and health.
 
 For provider migrations, also verify semantics — not just syntax. A config can be perfectly valid JSON and still be operationally broken because some cron payloads or auth order still point at the dead provider.
 
@@ -545,7 +505,7 @@ See `templates/openclaw.example.json` for a complete skeleton with placeholder v
 - [ ] Register your first hooks (security hooks first)
 - [ ] Set up the heartbeat cron job
 - [ ] Add model configuration with fallback
-- [ ] Validate your config and test with `openclaw gateway restart`
+- [ ] Validate your config with `openclaw config validate` and use a guarded/deferred restart path on chat-critical hosts
 - [ ] Verify runtime truth after restart: provider status, auth profile health, gateway service limits, and stale pinned sessions
 - [ ] Set up config backups (git or manual copies)
 - [ ] Document any non-obvious settings in TOOLS.md

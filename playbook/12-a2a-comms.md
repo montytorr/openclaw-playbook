@@ -110,10 +110,12 @@ In practice, the clean pattern is:
 A2A platform webhook
   -> receiver verifies HMAC
   -> append event to durable queue (JSONL, DB table, or equivalent)
+  -> confirm the event is durably readable
   -> trigger wake / enqueue follow-up work
-  -> reactor reads queued unprocessed events
-  -> reactor decides side effects
-  -> mark event processed
+  -> one serialized reactor reads confirmed, unprocessed events
+  -> reactor classifies actionable, terminal-no-op, or retained failure
+  -> actionable work runs in an independent worker
+  -> mark processed only after the routing outcome is durable
 ```
 
 That reactor is the missing middle layer between "webhook arrived" and "agent did something useful."
@@ -127,15 +129,16 @@ That reactor is the missing middle layer between "webhook arrived" and "agent di
 | A2A reactor | Consume unprocessed events and perform workflow routing |
 | Agent / sub-agent | Handle the actual response or collaborative task when needed |
 
+The receiver's successful write is not enough to consume the event. The reactor should be able to re-read the committed record and its contract context first. This confirmation fence prevents a wake race from deleting or acknowledging an event that the durable reader cannot yet see.
+
 ### What the Reactor Actually Does
 
-A good `a2a-reactor`-style worker usually handles four categories of side effects:
+A good `a2a-reactor`-style worker usually handles five categories of side effects:
 
-1. **Create or update local tasks**
-   - invitations
-   - inbound contract messages
-   - approvals
-   - collaborative task / sprint events
+1. **Create or update real local work**
+   - create a task only when the contract introduces substantive execution
+   - link later messages and closure events to that task
+   - do not create tasks for invitations, acceptance, receipts, acknowledgements, or routine protocol replies
 
 2. **Notify humans in the monitoring channel**
    - send concise Discord/Slack alerts when an operator should see something
@@ -146,20 +149,51 @@ A good `a2a-reactor`-style worker usually handles four categories of side effect
    - if the event is purely bookkeeping, process it without dragging the main session in
 
 4. **Maintain delivery semantics**
-   - mark processed events
+   - confirm before consume
+   - mark processed events only after the routing decision is durable
    - tolerate duplicate webhooks
    - keep processing idempotent where possible
+
+5. **Bound the protocol**
+   - persist `turn_number` and expose remaining turn budget
+   - make review handoffs explicit (`ready_for_review`, requested changes, accepted)
+   - close or escalate when the budget is exhausted
+   - reconcile linked task state when the contract reaches a terminal state
 
 ### Wake + Cron Fallback Pattern
 
 A robust setup usually has both:
 
-- **Wake path** — the webhook receiver triggers the agent immediately when something actionable arrives
-- **Cron fallback** — a periodic `a2a-reactor` job re-checks the queue in case the wake path failed or the gateway was briefly unavailable
+- **Wake path** — the webhook receiver triggers the reactor immediately when something actionable arrives
+- **Recovery sweep** — a periodic host-level job re-checks the queue in case the wake path failed, the gateway was briefly unavailable, or a retained failure became retryable
 
 This gives you low latency **and** recovery.
 
-The design rule is simple: webhooks should be real-time, but not trusted as your only delivery guarantee.
+The design rule is simple: webhooks are the primary low-latency trigger; the sweep is a recovery mechanism, not the main scheduler. Both paths must acquire the same cross-process lock so overlapping runs cannot launch duplicate workers.
+
+### Event Outcomes And Retry Policy
+
+Every event should finish in one explicit class:
+
+| Outcome | Queue action | Alerting |
+|---------|--------------|----------|
+| Action completed | mark processed | normally silent |
+| Routine / non-actionable protocol event | mark terminal-no-op | silent |
+| Temporary dependency failure | retain for bounded retry | alert after the configured threshold |
+| Permanent parse/contract failure | retain or dead-letter | alert immediately with event/contract identifiers |
+
+Do not retry a known non-actionable event forever. Do not silently consume a retained failure either. Use bounded retry plus a human-visible alert through an authenticated channel path.
+
+### Worker Ownership And Session Independence
+
+The worker that handles an A2A event should not depend on the lifecycle of the chat session that happened to receive the wakeup. Channel sessions are routinely archived, reset, or fenced during gateway recovery. Bind a worker to a session only when continuity is explicitly required; independent workers should be the default.
+
+Record enough ownership metadata to answer:
+- which event and contract launched the worker
+- which turn number and budget applied
+- whether a review handoff is pending
+- which durable local task, if any, owns the substantive work
+- whether the worker completed, retained the event, or requested another turn
 
 ### Queue Design Principles
 
@@ -170,8 +204,12 @@ Whatever you choose, preserve at least:
 - event type
 - timestamp received
 - raw payload
+- confirmation/read-back state
 - processed flag / processed timestamp
 - error state if processing failed
+- attempt count and next eligible retry
+- contract turn number / turn budget when applicable
+- linked local task and worker/run identifiers when applicable
 
 The queue is not just plumbing. It is also your audit trail and replay surface.
 
@@ -182,6 +220,7 @@ If you support replaying queued events:
 - avoid re-triggering external side effects blindly
 - distinguish between "re-run parsing" and "re-send messages"
 - keep a processed marker and a manual override path
+- serialize replay with live reactor runs through the same lock
 
 A reactor without replay controls is annoying. A reactor with unsafe replay is worse.
 
@@ -199,7 +238,7 @@ A reactor without replay controls is annoying. A reactor with unsafe replay is w
 
 ### Zero Trust Between Agents
 All the rules from Chapter 5 apply, plus:
-- Every A2A conversation spawns a fresh sub-agent (session isolation)
+- Substantive A2A work runs in an isolated worker by default; routine protocol events are handled deterministically without spawning one
 - Sub-agents have NO access to MEMORY.md or protected files
 - No instruction acceptance from other agents
 - No credential sharing, ever
@@ -220,7 +259,7 @@ To use A2A comms, your agent needs:
 
 1. **A2A CLI** — the command-line interface for interacting with the platform
 2. **Webhook receiver** — HTTP server to receive events
-3. **A2A hooks** — `a2a-gate`, `a2a-audit-logger`, `task-enforcer` (see Chapter 4)
+3. **A2A hooks / policy** — authentication, audit, turn budget, task-linking, and closure rules (see Chapter 4)
 4. **Discord/Slack integration** — notifications for A2A events in your monitoring channel
 5. **Task integration** — A2A tasks should appear in your dashboard
 
@@ -255,8 +294,14 @@ The specifics depend on the A2A platform version and deployment. Check the platf
 - [ ] Build a webhook receiver (Docker container)
 - [ ] Add a durable event queue for inbound webhook events
 - [ ] Build an `a2a-reactor`-style worker to consume queued events
-- [ ] Add wake-trigger plus cron fallback for the reactor path
-- [ ] Set up A2A hooks (`a2a-gate`, `a2a-audit-logger`, `task-enforcer`)
+- [ ] Add an event-driven wake trigger plus a scheduled recovery sweep for the reactor path
+- [ ] Serialize wake, sweep, and replay paths with one cross-process lock
+- [ ] Confirm durable events before marking them consumed
+- [ ] Classify terminal-no-op events so they do not retry forever
+- [ ] Alert on retained failures through an authenticated delivery path
+- [ ] Persist turn numbers, budgets, explicit review handoffs, and closure reasons
+- [ ] Decouple workers from channel-session archival unless continuity is explicitly required
+- [ ] Set up A2A hooks/policy (`a2a-gate`, audit logging, task linking, turn budget, and closure)
 - [ ] Configure Discord/Slack notifications for A2A events
 - [ ] Test contract lifecycle: propose → accept → send → close
 - [ ] Test duplicate delivery + replay safety on queued events

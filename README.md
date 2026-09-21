@@ -1,8 +1,12 @@
 # OpenClaw Playbook
 
-An educational playbook for running an autonomous OpenClaw agent. Built from real operational patterns — battle-tested across months of 24/7 autonomous operation.
+[![Release](https://img.shields.io/github/v/release/montytorr/openclaw-playbook)](https://github.com/montytorr/openclaw-playbook/releases)
+[![Verify](https://github.com/montytorr/openclaw-playbook/actions/workflows/verify.yml/badge.svg)](https://github.com/montytorr/openclaw-playbook/actions/workflows/verify.yml)
+[![License](https://img.shields.io/github/license/montytorr/openclaw-playbook)](LICENSE)
 
-**Curation status: reviewed 2026-09-10.** This is an operational playbook, not a frozen configuration dump. Model IDs, plugin names, CLI commands, and provider behavior change faster than prose; every version-sensitive example is a placeholder or must be verified against the target installation before use.
+A production operations playbook for running secure, durable, autonomous OpenClaw agents. Built from real operational patterns battle-tested across months of 24/7 operation.
+
+**Curation status: reviewed against OpenClaw 2026.9.2 on 2026-09-21.** This is an operational playbook, not a frozen configuration dump. Model IDs, plugin names, CLI commands, and provider behavior change faster than prose; every version-sensitive example is a placeholder or must be verified against the target installation before use.
 
 ## Who This Is For
 
@@ -26,6 +30,9 @@ Experienced developers who:
 - **Reference implementations** — tiny runnable scripts and hook skeletons so you don't start from a blank page
 - **Validation docs** — a verification-first rollout path for proving the loop actually works
 - **Operator hardening patterns** — host-level watchdogs, gateway memory caps, Codex auth hygiene, session-store pressure control, and Docker bridge verification
+- **Safe restart ownership** — deferred gateway restarts, bounded active-run fences, debounce overrides, and live acceptance checks
+- **A2A reliability contracts** — confirmation-before-consumption, event-driven wakeups with recovery sweeps, serialized reactors, turn budgets, explicit review handoffs, and contract/task closure reconciliation
+- **Privilege boundaries** — keep privileged agent work out of human-owned checkouts and detect ownership drift before Git writes fail
 - **Verification scripts** — bundled starter checks for integrity, memory readiness, generic smoke tests, brownfield checks, and full local rollout validation
 - **Brownfield extras** — adapter scaffolds, migration case studies, and verifiers for active-workspace adoption
 - **GitHub Actions CI** — a minimal verify workflow for push + pull_request
@@ -132,7 +139,7 @@ openclaw-playbook/
 If you don't want the full stack on day one, start with these four things:
 
 1. daily notes in `memory/YYYY-MM-DD.md`
-2. a minimal `task` tracker
+2. one authoritative task tracker
 3. a small `HEARTBEAT.md`
 4. one security hook guarding dangerous tool calls
 
@@ -166,8 +173,10 @@ webhook receiver -> durable queue -> a2a-reactor -> side effects
 Meaning:
 - the receiver verifies HMAC and persists events fast
 - the queue absorbs retries and survives restarts
-- the reactor decides what to do: create tasks, notify humans, wake the agent, or stay quiet
-- a cron fallback can re-run the reactor if the immediate wake path fails
+- the reactor confirms the durable event before consuming it, serializes overlapping runs, and classifies actionable versus terminal-no-op events
+- the reactor decides what to do: update real work, notify humans, wake an independent worker, or stay quiet
+- the immediate wake path handles low latency; a cron recovery sweep catches missed or retained work without becoming the primary scheduler
+- turn numbers and budgets make multi-turn contracts close predictably instead of drifting forever
 
 If you remember one thing from the collaboration stack, remember that. Don't bury heavy logic in the webhook handler.
 
@@ -196,7 +205,7 @@ This playbook is opinionated. The core beliefs:
 - **The memory system should become an LLM wiki.** Durable memory is more valuable when humans and agents can browse it, search it, trace sources, and understand relationships between notes, tasks, docs, people, and projects.
 - **Obsidian is a strong wiki surface when it is managed deliberately.** Sync canonical files, color-code graph groups, query it from the agent, and use middle-ground project links instead of pure star hubs.
 - **Knowledge graphs should stay practical.** The point is not ontology theater. The point is linking the things your agent already touches so retrieval, handoffs, and briefings improve over time.
-- **Track everything.** Rule Zero exists because autonomous agents that don't track their work become black boxes. If it happened, it should be logged.
+- **Track durable work, not protocol noise.** Rule Zero exists because autonomous agents that don't track real work become black boxes. Routine receipts, invitations, acknowledgements, and contract acceptance should not create duplicate tasks; substantive execution should.
 - **Brownfield beats fantasy.** Most real adoptions happen in already-active environments. Optimize for reversibility, wrappers, archives, and validation inside a dirty repo — not imaginary clean-room migrations.
 - **Security is non-negotiable.** The moment you give an agent access to your email, git, and infrastructure, you need defense in depth. Not paranoia — engineering.
 - **Build your own tools.** Copying someone else's hooks and scripts gives you their security assumptions without their context. Understand the pattern, then implement it yourself.

@@ -43,7 +43,6 @@ Typical sources:
 /root/memory/.dreams/**/*.{md,txt,json,jsonl}
 /root/backups/memory/**/*.{md,json}
 /root/projects/**/*.md
-/root/clawd/projects/**/*.md
 /root/clawd/docs/**/*.md
 /root/clawd/scripts/README.md
 ```
